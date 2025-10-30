@@ -1,4 +1,3 @@
-import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
@@ -10,7 +9,6 @@ import AdminTemplates from "./pages/admin/Templates";
 import AdminStatistics from "./pages/admin/Statistics";
 import ClientDashboard from "./pages/client/Dashboard";
 import ExercisePage from "./pages/client/ExercisePage";
-import "./App.css";
 
 function App() {
   return (
