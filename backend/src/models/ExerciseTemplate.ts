@@ -35,6 +35,7 @@ export interface IExerciseTemplate extends Document {
     id: string;
     type: FieldType;
     label: string;
+    desc: string;
     placeholder?: string;
     required: boolean;
     options?: string[];
@@ -71,6 +72,7 @@ const exerciseTemplateSchema = new Schema<IExerciseTemplate>(
         id: { type: String, required: true },
         type: { type: String, enum: Object.values(FieldType), required: true },
         label: { type: String, required: true },
+        desc: String,
         placeholder: String,
         required: { type: Boolean, default: false },
         options: [String],

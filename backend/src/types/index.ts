@@ -84,6 +84,7 @@ export interface IExerciseTemplate {
     id: string;
     type: FieldType;
     label: string;
+    desc: string;
     placeholder?: string;
     required: boolean;
     options?: string[]; // For radio, checkbox

@@ -229,14 +229,18 @@ const ExercisePage: React.FC = () => {
 
             {template.description && (
               <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 mb-4">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line">{template.description}</p>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                  <span className="text-yellow-600 text-2xl pl-1">☀</span> {template.description}
+                </p>
               </div>
             )}
 
             {template.instructions && (
               <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-2">دستورالعمل:</h3>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line">{template.instructions}</p>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line font-semibold">
+                  <span className="text-yellow-600 text-2xl pl-1">⁂</span>
+                  {template.instructions}
+                </p>
               </div>
             )}
           </div>
@@ -254,10 +258,17 @@ const ExercisePage: React.FC = () => {
             .sort((a: any, b: any) => a.order - b.order)
             .map((field: any) => (
               <div key={field.id} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <label className="block text-lg font-semibold text-gray-900 mb-4">
+                <label className="block text-xl font-semibold text-gray-900 mb-4">
                   {field.label}
                   {field.required && <span className="text-red-500 mr-1">*</span>}
                 </label>
+                <h3 className="font-bold my-2">
+                  <span className="text-green-600 bg-green-500 ml-1 py-0.5 px-1.5 rounded-full text-lg">
+                    ❔
+                  </span>
+                  {field.placeholder}
+                </h3>
+                <p className="text-md my-2 bg-green-50"> ↩ {field.desc}</p>
                 {renderField(field)}
               </div>
             ))}
@@ -288,7 +299,7 @@ const ExercisePage: React.FC = () => {
         </form>
 
         {/* Completion Message */}
-        {template.completionMessage && (
+        {saving && (
           <div className="bg-green-50 border border-green-100 rounded-lg p-4 mt-6">
             <p className="text-gray-700 leading-relaxed">{template.completionMessage}</p>
           </div>

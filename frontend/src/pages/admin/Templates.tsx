@@ -75,6 +75,7 @@ const Templates: React.FC = () => {
           id: `field_${Date.now()}`,
           type: "text",
           label: "",
+          desc: "",
           placeholder: "",
           required: false,
           order: formData.fields.length + 1,
@@ -191,7 +192,7 @@ const Templates: React.FC = () => {
 
                 <div className="border-t border-gray-100 pt-4 space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">تعداد فیلدها:</span>
+                    <span className="text-gray-600">تعداد درخواستها:</span>
                     <span className="font-medium">{template.fields?.length || 0}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
@@ -207,10 +208,7 @@ const Templates: React.FC = () => {
 
       {/* Modal */}
       {showModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-          onClick={() => setShowModal(false)}
-        >
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div
             className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
@@ -305,14 +303,14 @@ const Templates: React.FC = () => {
               {/* Fields Section */}
               <div className="border-t border-gray-200 pt-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">فیلدهای فرم</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">فرم درخواست‌ها</h3>
                   <button
                     type="button"
                     onClick={addField}
                     className="flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-lg hover:bg-green-200 transition text-sm"
                   >
                     <Plus className="w-4 h-4" />
-                    افزودن فیلد
+                    افزودن درخواست
                   </button>
                 </div>
 
@@ -320,7 +318,12 @@ const Templates: React.FC = () => {
                   {formData.fields.map((field, index) => (
                     <div key={field.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-medium text-gray-700">فیلد #{index + 1}</span>
+                        <span className="text-sm font-medium text-gray-700">
+                          درخواست{" "}
+                          <span className="text-white bg-green-700 mx-1 px-1.5 border border-green-600 rounded-full">
+                            {index + 1}
+                          </span>
+                        </span>
                         <button
                           type="button"
                           onClick={() => removeField(index)}
@@ -332,7 +335,7 @@ const Templates: React.FC = () => {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-xs text-gray-600 mb-1">نوع فیلد</label>
+                          <label className="block text-xs text-gray-600 mb-1">نوع درخواست</label>
                           <select
                             value={field.type}
                             onChange={(e) => updateField(index, "type", e.target.value)}
@@ -349,7 +352,7 @@ const Templates: React.FC = () => {
                         </div>
 
                         <div>
-                          <label className="block text-xs text-gray-600 mb-1">برچسب سوال</label>
+                          <label className="block text-xs text-gray-600 mb-1">برچسب سؤال</label>
                           <input
                             type="text"
                             value={field.label}
@@ -360,7 +363,7 @@ const Templates: React.FC = () => {
                         </div>
 
                         <div>
-                          <label className="block text-xs text-gray-600 mb-1">متن راهنما</label>
+                          <label className="block text-xs text-gray-600 mb-1">سوال راهنما</label>
                           <input
                             type="text"
                             value={field.placeholder || ""}
@@ -368,7 +371,15 @@ const Templates: React.FC = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                           />
                         </div>
-
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">توضیحات سوال</label>
+                          <textarea
+                            value={field.desc}
+                            onChange={(e) => updateField(index, "desc", e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg h-30 text-sm"
+                            placeholder="توضیحات سوال خود را وارد کنید"
+                          />
+                        </div>
                         <div className="flex items-center gap-4">
                           <label className="flex items-center gap-2">
                             <input
@@ -430,7 +441,7 @@ const Templates: React.FC = () => {
 
                   {formData.fields.length === 0 && (
                     <div className="text-center py-8 text-gray-500">
-                      هیچ فیلدی اضافه نشده است. روی "افزودن فیلد" کلیک کنید.
+                      هیچ درخواستی اضافه نشده است. روی "افزودن درخواست" کلیک کنید.
                     </div>
                   )}
                 </div>
