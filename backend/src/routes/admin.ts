@@ -337,8 +337,13 @@ router.get("/clients/:id/progress", async (req: AuthRequest, res) => {
 
     const groupedByType = exercises.reduce((acc: any, ex: any) => {
       const groupType = ex.groupAssignmentId.groupType;
-      if (!acc[groupType]) acc[groupType] = [];
-      acc[groupType].push(ex);
+      if (!acc[groupType]) {
+        acc[groupType] = {
+          assignment: ex.groupAssignmentId,
+          exercises: [],
+        };
+      }
+      acc[groupType].exercises.push(ex);
       return acc;
     }, {});
 
