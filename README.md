@@ -169,6 +169,7 @@ npm start
 
 ```
 ایمیل: admin@example.com
+
 رمز عبور: admin123
 ```
 
