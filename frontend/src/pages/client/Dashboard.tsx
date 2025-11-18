@@ -2,13 +2,17 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import ClientLayout from "../../components/ClientLayout";
-import { ClipboardList, Lock, CheckCircle2, Clock, TrendingUp, Award, Target, Sparkles } from "lucide-react";
+import { ClipboardList, Lock, CheckCircle2, Clock, TrendingUp, Award, Target, Sparkles, ChevronDown, ChevronUp, Bell } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const ClientDashboard: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({});
+  const [morningTimes, setMorningTimes] = useState<{ [key: string]: string }>({});
+  const [savingTime, setSavingTime] = useState<{ [key: string]: boolean }>({});
+
   const wellcomeForControl = ` ${user?.name} عزیز! به بخش پایش خود در موقعیت های اجتماعی  خوش آمدید.
 
 در این تمرین‌ها، شما یاد می‌گیرید که چطور بدون قضاوت، توجه‌تان را به تجربه‌های روزمره‌ی خود مانند افکار، احساسات و رفتارها معطوف کنید. بر خلاف تمرین‌هایی که روی هیجانات مثبت تمرکز دارند، هدف این تمرین‌ها افزایش توانایی شما برای مشاهده‌ی دقیق آنچه درونتان می‌گذرد است، بدون اینکه لازم باشد آن‌ها را تغییر دهید یا بهترشان کنید.
@@ -39,10 +43,46 @@ const ClientDashboard: React.FC = () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/client/dashboard`);
       setDashboardData(res.data.data);
+
+      // Initialize morning times from assignments
+      const times: { [key: string]: string } = {};
+      Object.entries(res.data.data?.exercisesByGroup || {}).forEach(([groupType, data]: any) => {
+        times[groupType] = data.assignment.morningNotificationTime || "08:00";
+      });
+      setMorningTimes(times);
     } catch (error) {
       console.error("Error fetching dashboard:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleGroup = (groupType: string) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [groupType]: !prev[groupType],
+    }));
+  };
+
+  const handleTimeChange = (groupType: string, time: string) => {
+    setMorningTimes((prev) => ({
+      ...prev,
+      [groupType]: time,
+    }));
+  };
+
+  const saveNotificationTime = async (groupType: string, assignmentId: string) => {
+    setSavingTime((prev) => ({ ...prev, [groupType]: true }));
+    try {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/client/set-notification-time`, {
+        groupAssignmentId: assignmentId,
+        time: morningTimes[groupType],
+      });
+      alert("زمان دریافت پیام با موفقیت ذخیره شد!");
+    } catch (error: any) {
+      alert(error.response?.data?.message || "خطا در ذخیره زمان");
+    } finally {
+      setSavingTime((prev) => ({ ...prev, [groupType]: false }));
     }
   };
 
@@ -179,105 +219,164 @@ const ClientDashboard: React.FC = () => {
         </div>
 
         {/* Exercise Groups */}
-        {Object.entries(dashboardData?.exercisesByGroup || {}).map(([groupType, data]: any) => (
-          <div
-            key={groupType}
-            className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden"
-          >
-            {/* Group Header */}
-            <div className="bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 p-6 sm:p-8 text-white">
-              <div className="flex items-center gap-3 mb-4">
-                <Target className="w-6 h-6 sm:w-8 sm:h-8" />
-                <h2 className="text-xl sm:text-2xl font-bold">
-                  {groupType === "control" ? "گروه کنترل - خودپایشی" : "گروه مداخله - تجویز هیجان مثبت"}
-                </h2>
-              </div>
-              <p className="text-sm sm:text-base text-blue-100">
-                شروع: {new Date(data.assignment.startDate).toLocaleDateString("fa-IR")}
-              </p>
-            </div>
+        {Object.entries(dashboardData?.exercisesByGroup || {}).map(([groupType, data]: any) => {
+          const isExpanded = expandedGroups[groupType];
+          const completedCount = data.exercises.filter((ex: any) => ex.status === "completed").length;
+          const totalCount = data.exercises.length;
 
-            {/* Welcome Message */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 sm:p-6 border-b border-indigo-100">
-              <p className="text-xs sm:text-sm text-justify text-gray-700 leading-relaxed whitespace-pre-line">
-                {groupType === "control" ? wellcomeForControl : wellcomeForIntervention}
-              </p>
-            </div>
-
-            {/* Important Notice */}
-            <div className="bg-gradient-to-r from-red-50 to-orange-50 p-4 sm:p-6 border-b border-red-100">
-              <div className="flex items-start gap-3">
-                <div className="bg-red-500 p-1.5 rounded-lg flex-shrink-0 mt-1">
-                  <Sparkles className="w-4 h-4 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-red-900 mb-2 text-sm sm:text-base">توجه مهم:</h3>
-                  <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
-                    هر روز یک پیام از طرف ما دریافت می‌کنید. این پیام‌ها به عنوان یادآوری برای انجام تمرین روزانه و
-                    تقویت توجه به هیجانات مثبت طراحی شده‌اند. برای اینکه این پیام‌ها بیشترین اثرگذاری را داشته
-                    باشند، لطفاً مشخص کنید که مایلید هر روز صبح، پیام تمرین در چه ساعتی برایتان ارسال شود (در
-                    بازه‌ی زمانی بین ساعت ۷ تا ۱۱:۳۰ صبح).
-                  </p>
-                  <p className="text-xs sm:text-sm text-green-700 mt-2 font-medium">
-                    ✅ پیشنهاد ما: زمانی را انتخاب کنید که معمولاً بیدار و آماده‌اید تمرین روز را ببینید، مثلاً قبل از
-                    شروع کلاس یا کار.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Exercises List */}
-            <div className="p-4 sm:p-6 lg:p-8">
-              <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                {data.exercises.map((exercise: any, index: number) => (
-                  <Link
-                    key={exercise._id}
-                    to={exercise.status !== "locked" ? `/exercises/${exercise._id}` : "#"}
-                    className={`group relative flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 ${
-                      exercise.status === "locked"
-                        ? "border-gray-200 bg-gray-50 cursor-not-allowed opacity-60"
-                        : "border-indigo-200 bg-gradient-to-br from-white to-indigo-50 hover:border-indigo-400 hover:shadow-xl transform hover:-translate-y-1 cursor-pointer"
-                    }`}
-                    onClick={(e) => exercise.status === "locked" && e.preventDefault()}
-                  >
-                    {/* Exercise Number */}
-                    <div
-                      className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center border-2 font-bold text-lg sm:text-xl transition-all ${
-                        exercise.status === "locked"
-                          ? "bg-gray-100 border-gray-300 text-gray-400"
-                          : "bg-gradient-to-br from-indigo-500 to-purple-600 border-indigo-300 text-white shadow-lg group-hover:scale-110"
-                      }`}
-                    >
-                      {index + 1}
-                    </div>
-
-                    {/* Exercise Info */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-gray-900 text-sm sm:text-base mb-1 truncate">
-                        {exercise.exerciseTemplateId.title}
-                      </h3>
-                      <p className="text-xs sm:text-sm text-gray-600 line-clamp-1 sm:line-clamp-2">
-                        {exercise.exerciseTemplateId.description}
+          return (
+            <div
+              key={groupType}
+              className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-gray-100 overflow-hidden"
+            >
+              {/* Collapsible Header */}
+              <button
+                onClick={() => toggleGroup(groupType)}
+                className="w-full bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 p-4 sm:p-6 text-white hover:from-blue-600 hover:via-indigo-700 hover:to-purple-700 transition-all"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 flex-1">
+                    <Target className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0" />
+                    <div className="text-right">
+                      <h2 className="text-lg sm:text-xl font-bold">
+                        {groupType === "control" ? "گروه کنترل - خودپایشی" : "گروه مداخله - تجویز هیجان مثبت"}
+                      </h2>
+                      <p className="text-xs sm:text-sm text-blue-100 mt-1">
+                        {completedCount} از {totalCount} تمرین تکمیل شده • شروع:{" "}
+                        {new Date(data.assignment.startDate).toLocaleDateString("fa-IR")}
                       </p>
                     </div>
-
-                    {/* Status Badge */}
-                    <div className="flex-shrink-0 flex items-center gap-2">
-                      {getStatusIcon(exercise.status)}
-                      <span
-                        className={`hidden sm:inline-block px-3 py-1.5 rounded-full text-xs font-bold border ${getStatusColor(
-                          exercise.status
-                        )}`}
-                      >
-                        {getStatusText(exercise.status)}
-                      </span>
+                  </div>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="bg-white/20 px-3 py-1.5 rounded-full text-xs sm:text-sm font-bold">
+                      {Math.round((completedCount / totalCount) * 100)}%
                     </div>
-                  </Link>
-                ))}
-              </div>
+                    {isExpanded ? (
+                      <ChevronUp className="w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" />
+                    ) : (
+                      <ChevronDown className="w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" />
+                    )}
+                  </div>
+                </div>
+              </button>
+
+              {/* Expandable Content */}
+              {isExpanded && (
+                <div className="animate-slideDown">
+                  {/* Welcome Message */}
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 sm:p-6 border-b border-indigo-100">
+                    <p className="text-xs sm:text-sm text-justify text-gray-700 leading-relaxed whitespace-pre-line">
+                      {groupType === "control" ? wellcomeForControl : wellcomeForIntervention}
+                    </p>
+                  </div>
+
+                  {/* Morning Notification Time Picker */}
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 sm:p-6 border-b border-orange-100">
+                    <div className="flex items-start gap-3">
+                      <div className="bg-orange-500 p-1.5 sm:p-2 rounded-lg flex-shrink-0 mt-1">
+                        <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-orange-900 mb-2 text-sm sm:text-base">⏰ زمان دریافت پیام صبحگاهی</h3>
+                        <p className="text-xs sm:text-sm text-gray-700 leading-relaxed mb-4">
+                          لطفاً ساعت دلخواه خود را برای دریافت پیام‌های یادآوری صبحگاهی انتخاب کنید (بین ساعت ۷ تا ۱۱:۳۰
+                          صبح). این پیام‌ها شما را به انجام تمرین‌های روزانه دعوت می‌کنند.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                          <div className="flex items-center gap-2 flex-1 max-w-xs">
+                            <label htmlFor={`time-${groupType}`} className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                              ساعت انتخابی:
+                            </label>
+                            <input
+                              type="time"
+                              id={`time-${groupType}`}
+                              value={morningTimes[groupType] || "08:00"}
+                              onChange={(e) => handleTimeChange(groupType, e.target.value)}
+                              min="07:00"
+                              max="11:30"
+                              className="flex-1 px-3 py-2 border-2 border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
+                            />
+                          </div>
+                          <button
+                            onClick={() => saveNotificationTime(groupType, data.assignment._id)}
+                            disabled={savingTime[groupType]}
+                            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-amber-600 transition disabled:opacity-50 text-sm sm:text-base font-medium shadow-md"
+                          >
+                            {savingTime[groupType] ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                در حال ذخیره...
+                              </>
+                            ) : (
+                              <>
+                                <Bell className="w-4 h-4" />
+                                ذخیره زمان
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        <p className="text-xs text-green-700 mt-3 font-medium">
+                          💡 نکته: بهتر است زمانی را انتخاب کنید که معمولاً بیدار و آماده انجام تمرین هستید.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Exercises List */}
+                  <div className="p-4 sm:p-6 lg:p-8">
+                    <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                      {data.exercises.map((exercise: any, index: number) => (
+                        <Link
+                          key={exercise._id}
+                          to={exercise.status !== "locked" ? `/exercises/${exercise._id}` : "#"}
+                          className={`group relative flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 ${
+                            exercise.status === "locked"
+                              ? "border-gray-200 bg-gray-50 cursor-not-allowed opacity-60"
+                              : "border-indigo-200 bg-gradient-to-br from-white to-indigo-50 hover:border-indigo-400 hover:shadow-xl transform hover:-translate-y-1 cursor-pointer"
+                          }`}
+                          onClick={(e) => exercise.status === "locked" && e.preventDefault()}
+                        >
+                          {/* Exercise Number */}
+                          <div
+                            className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center border-2 font-bold text-lg sm:text-xl transition-all ${
+                              exercise.status === "locked"
+                                ? "bg-gray-100 border-gray-300 text-gray-400"
+                                : "bg-gradient-to-br from-indigo-500 to-purple-600 border-indigo-300 text-white shadow-lg group-hover:scale-110"
+                            }`}
+                          >
+                            {index + 1}
+                          </div>
+
+                          {/* Exercise Info */}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-gray-900 text-sm sm:text-base mb-1 truncate">
+                              {exercise.exerciseTemplateId.title}
+                            </h3>
+                            <p className="text-xs sm:text-sm text-gray-600 line-clamp-1 sm:line-clamp-2">
+                              {exercise.exerciseTemplateId.description}
+                            </p>
+                          </div>
+
+                          {/* Status Badge */}
+                          <div className="flex-shrink-0 flex items-center gap-2">
+                            {getStatusIcon(exercise.status)}
+                            <span
+                              className={`hidden sm:inline-block px-3 py-1.5 rounded-full text-xs font-bold border ${getStatusColor(
+                                exercise.status
+                              )}`}
+                            >
+                              {getStatusText(exercise.status)}
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Recent Notifications */}
         {dashboardData?.unreadNotifications?.length > 0 && (
