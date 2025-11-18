@@ -17,7 +17,22 @@ router.get("/clients", async (req: AuthRequest, res) => {
   try {
     const clients = await User.find({ role: UserRole.CLIENT }).select("-password").sort("-createdAt");
 
-    res.json({ success: true, clients });
+    // Fetch group assignments for each client
+    const clientsWithGroups = await Promise.all(
+      clients.map(async (client) => {
+        const groupAssignments = await GroupAssignment.find({
+          userId: client._id,
+          isActive: true,
+        }).select("groupType morningNotificationTime");
+
+        return {
+          ...client.toObject(),
+          groupAssignments,
+        };
+      })
+    );
+
+    res.json({ success: true, clients: clientsWithGroups });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

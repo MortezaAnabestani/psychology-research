@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import AdminLayout from "../../components/AdminLayout";
-import { Plus, Edit, Trash2, UserPlus, Mail } from "lucide-react";
+import { Plus, Edit, Trash2, UserPlus, Mail, Clock } from "lucide-react";
 
 const AdminClients: React.FC = () => {
   const [clients, setClients] = useState<any[]>([]);
@@ -107,6 +107,8 @@ const AdminClients: React.FC = () => {
                       تاریخ ثبت‌نام
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">وضعیت</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">گروه‌ها</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">زمان انتخابی</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">عملیات</th>
                   </tr>
                 </thead>
@@ -137,6 +139,45 @@ const AdminClients: React.FC = () => {
                         >
                           {client.isActive ? "فعال" : "غیرفعال"}
                         </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          {client.groupAssignments && client.groupAssignments.length > 0 ? (
+                            client.groupAssignments.map((assignment: any, idx: number) => (
+                              <span
+                                key={idx}
+                                className={`px-2 py-1 text-xs font-semibold rounded-full inline-block ${
+                                  assignment.groupType === "control"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "bg-purple-100 text-purple-800"
+                                }`}
+                              >
+                                {assignment.groupType === "control" ? "کنترل" : "مداخله"}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-xs text-gray-400">بدون گروه</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1.5 text-sm">
+                          {client.groupAssignments && client.groupAssignments.length > 0 ? (
+                            client.groupAssignments.map((assignment: any, idx: number) => (
+                              <div key={idx} className="flex items-center gap-2 text-xs">
+                                <Clock className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                <span className="text-gray-700 font-medium">
+                                  {assignment.morningNotificationTime || "انتخاب نشده"}
+                                </span>
+                                <span className="text-gray-400">
+                                  ({assignment.groupType === "control" ? "کنترل" : "مداخله"})
+                                </span>
+                              </div>
+                            ))
+                          ) : (
+                            <span className="text-xs text-gray-400">-</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <div className="flex items-center gap-2">
@@ -204,6 +245,41 @@ const AdminClients: React.FC = () => {
                   <div className="text-xs text-gray-500 mb-3">
                     تاریخ ثبت‌نام: {new Date(client.createdAt).toLocaleDateString("fa-IR")}
                   </div>
+
+                  {/* Groups and Times Info */}
+                  {client.groupAssignments && client.groupAssignments.length > 0 && (
+                    <div className="bg-gray-50 rounded-lg p-3 mb-3 space-y-2">
+                      <div className="flex flex-wrap gap-1.5">
+                        <span className="text-xs font-medium text-gray-600">گروه‌ها:</span>
+                        {client.groupAssignments.map((assignment: any, idx: number) => (
+                          <span
+                            key={idx}
+                            className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
+                              assignment.groupType === "control"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-purple-100 text-purple-800"
+                            }`}
+                          >
+                            {assignment.groupType === "control" ? "کنترل" : "مداخله"}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-xs font-medium text-gray-600">زمان‌های انتخابی:</span>
+                        {client.groupAssignments.map((assignment: any, idx: number) => (
+                          <div key={idx} className="flex items-center gap-2 text-xs mr-2">
+                            <Clock className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                            <span className="text-gray-700 font-medium">
+                              {assignment.morningNotificationTime || "انتخاب نشده"}
+                            </span>
+                            <span className="text-gray-400">
+                              ({assignment.groupType === "control" ? "کنترل" : "مداخله"})
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="flex flex-wrap gap-2">
                     <button
