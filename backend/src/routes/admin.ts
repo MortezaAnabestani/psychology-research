@@ -162,12 +162,12 @@ router.post("/sync-exercises/:assignmentId", async (req: AuthRequest, res) => {
     // Create missing exercises
     let created = 0;
     for (const template of templates) {
-      const templateId = template._id.toString();
+      const templateId = (template._id as any).toString();
       if (!existingTemplateIds.includes(templateId)) {
         await UserExercise.create({
           userId: assignment.userId,
           groupAssignmentId: assignment._id,
-          exerciseTemplateId: template._id,
+          exerciseTemplateId: template._id as any,
           status: created === 0 && existingExercises.length === 0 ? ExerciseStatus.AVAILABLE : ExerciseStatus.LOCKED,
         });
         created++;
