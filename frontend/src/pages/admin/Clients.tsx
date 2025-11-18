@@ -75,17 +75,17 @@ const AdminClients: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">مدیریت مراجعان</h1>
-            <p className="text-gray-600 mt-1">لیست و مدیریت کاربران</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">مدیریت مراجعان</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">لیست و مدیریت کاربران</p>
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+            className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2.5 sm:py-2 rounded-lg hover:bg-indigo-700 transition text-sm sm:text-base"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
             افزودن مراجع جدید
           </button>
         </div>
@@ -95,86 +95,154 @@ const AdminClients: React.FC = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">نام</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">ایمیل</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                    تاریخ ثبت‌نام
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">وضعیت</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">عملیات</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {clients.map((client) => (
-                  <tr key={client._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                          <span className="text-indigo-600 font-semibold">{client.name.charAt(0)}</span>
-                        </div>
-                        <div className="mr-3">
-                          <div className="text-sm font-medium text-gray-900">{client.name}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{client.email}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(client.createdAt).toLocaleDateString("fa-IR")}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          client.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {client.isActive ? "فعال" : "غیرفعال"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleAssignGroup(client._id, "control")}
-                          className="text-blue-600 hover:text-blue-800"
-                          title="اختصاص به گروه کنترل"
-                        >
-                          <UserPlus className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleAssignGroup(client._id, "intervention")}
-                          className="text-purple-600 hover:text-purple-800"
-                          title="اختصاص به گروه مداخله"
-                        >
-                          <UserPlus className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedClient(client);
-                            setFormData({ name: client.name, email: client.email, password: "" });
-                            setShowModal(true);
-                          }}
-                          className="text-indigo-600 hover:text-indigo-800"
-                        >
-                          <Edit className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(client._id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </td>
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">نام</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">ایمیل</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      تاریخ ثبت‌نام
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">وضعیت</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">عملیات</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {clients.map((client) => (
+                    <tr key={client._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                            <span className="text-indigo-600 font-semibold">{client.name.charAt(0)}</span>
+                          </div>
+                          <div className="mr-3">
+                            <div className="text-sm font-medium text-gray-900">{client.name}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{client.email}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(client.createdAt).toLocaleDateString("fa-IR")}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            client.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {client.isActive ? "فعال" : "غیرفعال"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleAssignGroup(client._id, "control")}
+                            className="text-blue-600 hover:text-blue-800"
+                            title="اختصاص به گروه کنترل"
+                          >
+                            <UserPlus className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleAssignGroup(client._id, "intervention")}
+                            className="text-purple-600 hover:text-purple-800"
+                            title="اختصاص به گروه مداخله"
+                          >
+                            <UserPlus className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedClient(client);
+                              setFormData({ name: client.name, email: client.email, password: "" });
+                              setShowModal(true);
+                            }}
+                            className="text-indigo-600 hover:text-indigo-800"
+                          >
+                            <Edit className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(client._id)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="lg:hidden space-y-3 sm:space-y-4">
+              {clients.map((client) => (
+                <div key={client._id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                        <span className="text-indigo-600 font-semibold text-lg">{client.name.charAt(0)}</span>
+                      </div>
+                      <div>
+                        <div className="text-base font-semibold text-gray-900">{client.name}</div>
+                        <div className="text-sm text-gray-600">{client.email}</div>
+                      </div>
+                    </div>
+                    <span
+                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        client.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {client.isActive ? "فعال" : "غیرفعال"}
+                    </span>
+                  </div>
+
+                  <div className="text-xs text-gray-500 mb-3">
+                    تاریخ ثبت‌نام: {new Date(client.createdAt).toLocaleDateString("fa-IR")}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => handleAssignGroup(client._id, "control")}
+                      className="flex-1 min-w-[45%] flex items-center justify-center gap-2 bg-blue-50 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-100 transition text-sm"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      گروه کنترل
+                    </button>
+                    <button
+                      onClick={() => handleAssignGroup(client._id, "intervention")}
+                      className="flex-1 min-w-[45%] flex items-center justify-center gap-2 bg-purple-50 text-purple-700 px-3 py-2 rounded-lg hover:bg-purple-100 transition text-sm"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      گروه مداخله
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedClient(client);
+                        setFormData({ name: client.name, email: client.email, password: "" });
+                        setShowModal(true);
+                      }}
+                      className="flex items-center justify-center gap-2 bg-indigo-50 text-indigo-700 px-3 py-2 rounded-lg hover:bg-indigo-100 transition text-sm"
+                    >
+                      <Edit className="w-4 h-4" />
+                      ویرایش
+                    </button>
+                    <button
+                      onClick={() => handleDelete(client._id)}
+                      className="flex items-center justify-center gap-2 bg-red-50 text-red-700 px-3 py-2 rounded-lg hover:bg-red-100 transition text-sm"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      حذف
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

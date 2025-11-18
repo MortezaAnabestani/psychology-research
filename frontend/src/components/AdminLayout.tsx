@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { LayoutDashboard, Users, ClipboardList, BarChart3, Settings, LogOut, Bell } from "lucide-react";
+import { LayoutDashboard, Users, ClipboardList, BarChart3, Settings, LogOut, Bell, Menu, X } from "lucide-react";
 import { useNotifications } from "../context/NotificationContext";
 
 interface AdminLayoutProps {
@@ -13,6 +13,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { unreadCount } = useNotifications();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const menuItems = [
     { path: "/admin", icon: LayoutDashboard, label: "داشبورد" },
@@ -29,8 +30,28 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+
       {/* Sidebar */}
-      <aside className="fixed right-0 top-0 h-full w-64 bg-white border-l border-gray-200 z-10">
+      <aside
+        className={`fixed right-0 top-0 h-full w-64 bg-white border-l border-gray-200 z-30 transform transition-transform duration-300 ease-in-out ${
+          sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
+        }`}
+      >
+        {/* Close button for mobile */}
+        <button
+          onClick={() => setSidebarOpen(false)}
+          className="absolute top-4 left-4 p-2 lg:hidden text-gray-600 hover:bg-gray-100 rounded-lg"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
         <div className="p-6">
           <h1 className="text-xl font-bold text-indigo-600">پنل مدیریت</h1>
           <p className="text-sm text-gray-600 mt-1">{user?.name}</p>
@@ -43,6 +64,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <Link
                 key={item.path}
                 to={item.path}
+                onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
                   isActive ? "bg-indigo-50 text-indigo-600" : "text-gray-700 hover:bg-gray-50"
                 }`}
@@ -66,11 +88,17 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       </aside>
 
       {/* Main Content */}
-      <div className="mr-64">
+      <div className="lg:mr-64">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-5">
+        <header className="bg-white border-b border-gray-200 px-4 sm:px-8 py-4 sticky top-0 z-10">
           <div className="flex items-center justify-between">
-            <div></div>
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 lg:hidden text-gray-600 hover:bg-gray-100 rounded-lg"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <div className="hidden lg:block"></div>
             <div className="flex items-center gap-4">
               <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
                 <Bell className="w-5 h-5" />
@@ -85,7 +113,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         </header>
 
         {/* Page Content */}
-        <main className="p-8">{children}</main>
+        <main className="p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

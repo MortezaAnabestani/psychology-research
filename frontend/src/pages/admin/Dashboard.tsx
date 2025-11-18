@@ -68,23 +68,23 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">داشبورد مدیریت</h1>
-          <p className="text-gray-600 mt-1">خلاصه‌ای از وضعیت پژوهش</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">داشبورد مدیریت</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">خلاصه‌ای از وضعیت پژوهش</p>
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
           {stats.map((stat) => (
-            <div key={stat.name} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div key={stat.name} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all p-4 sm:p-6 border border-gray-100">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">{stat.name}</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-2">{stat.value}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">{stat.name}</p>
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 sm:mt-2">{stat.value}</p>
                 </div>
-                <div className={`${stat.color} p-3 rounded-lg`}>
-                  <stat.icon className="w-6 h-6 text-white" />
+                <div className={`${stat.color} p-2 sm:p-3 rounded-lg flex-shrink-0`}>
+                  <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
               </div>
             </div>
@@ -92,7 +92,7 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Group Distribution */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">توزیع گروه‌ها</h2>
             <div className="space-y-4">
@@ -154,29 +154,29 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">دسترسی سریع</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">دسترسی سریع</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <Link
               to="/admin/clients"
-              className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg hover:shadow-md transition"
+              className="flex items-center gap-3 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg hover:shadow-md transition transform hover:-translate-y-1"
             >
-              <Users className="w-6 h-6 text-blue-600" />
-              <span className="font-medium text-blue-900">مدیریت مراجعان</span>
+              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
+              <span className="font-medium text-sm sm:text-base text-blue-900">مدیریت مراجعان</span>
             </Link>
             <Link
               to="/admin/templates"
-              className="flex items-center gap-3 p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg hover:shadow-md transition"
+              className="flex items-center gap-3 p-3 sm:p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg hover:shadow-md transition transform hover:-translate-y-1"
             >
-              <ClipboardList className="w-6 h-6 text-purple-600" />
-              <span className="font-medium text-purple-900">قالب‌های تمرین</span>
+              <ClipboardList className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 flex-shrink-0" />
+              <span className="font-medium text-sm sm:text-base text-purple-900">قالب‌های تمرین</span>
             </Link>
             <Link
               to="/admin/statistics"
-              className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-lg hover:shadow-md transition"
+              className="flex items-center gap-3 p-3 sm:p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-lg hover:shadow-md transition transform hover:-translate-y-1 sm:col-span-2 lg:col-span-1"
             >
-              <TrendingUp className="w-6 h-6 text-green-600" />
-              <span className="font-medium text-green-900">گزارش‌ها و آمار</span>
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0" />
+              <span className="font-medium text-sm sm:text-base text-green-900">گزارش‌ها و آمار</span>
             </Link>
           </div>
         </div>
