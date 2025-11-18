@@ -18,9 +18,10 @@ export function startCronJobs() {
       });
 
       for (const notification of pendingNotifications) {
-        // Send both push and email notifications
+        // Send push, email, and SMS notifications
         await NotificationService.sendPushNotification(notification._id.toString());
         await NotificationService.sendEmailNotification(notification._id.toString());
+        await NotificationService.sendSMSNotification(notification._id.toString());
       }
     } catch (error) {
       console.error("Cron job error:", error);

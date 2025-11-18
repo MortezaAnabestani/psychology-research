@@ -4,6 +4,7 @@ import { UserExercise } from "../models/UserExercise";
 import { ExerciseTemplate } from "../models/ExerciseTemplate";
 import { User } from "../models/User";
 import { sendEmail } from "../config/email";
+import { SMSService } from "./smsService";
 
 // Configure web-push
 webpush.setVapidDetails(
@@ -182,6 +183,41 @@ export class NotificationService {
       await notification.save();
     } catch (error) {
       console.error("Error sending email notification:", error);
+    }
+  }
+
+  // Send SMS notification
+  static async sendSMSNotification(notificationId: string) {
+    try {
+      const notification = await Notification.findById(notificationId)
+        .populate("userId")
+        .populate("exerciseId");
+
+      if (!notification) return;
+
+      const user: any = notification.userId;
+
+      // Check if user has phone number
+      if (!user.phone) {
+        console.log(`SMS not sent: User ${user.name} has no phone number`);
+        return;
+      }
+
+      // Prepare SMS message
+      const message = `${notification.message}\n\nبرای انجام تمرین وارد پنل شوید.\nپژوهش روانشناسی`;
+
+      // Send SMS
+      const success = await SMSService.sendSMS(user.phone, message);
+
+      if (success) {
+        // Mark as sent only if not already marked by email/push
+        if (!notification.sentAt) {
+          notification.sentAt = new Date();
+          await notification.save();
+        }
+      }
+    } catch (error) {
+      console.error("Error sending SMS notification:", error);
     }
   }
 }
