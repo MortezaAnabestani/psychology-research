@@ -144,6 +144,48 @@ router.get("/clients/:id/groups", async (req: AuthRequest, res) => {
   }
 });
 
+// Sync exercises for a specific group assignment
+router.post("/sync-exercises/:assignmentId", async (req: AuthRequest, res) => {
+  try {
+    const assignment = await GroupAssignment.findById(req.params.assignmentId);
+    if (!assignment) {
+      return res.status(404).json({ message: "گروه یافت نشد" });
+    }
+
+    // Get all templates for this group type
+    const templates = await ExerciseTemplate.find({ groupType: assignment.groupType }).sort("order");
+
+    // Get existing exercises for this assignment
+    const existingExercises = await UserExercise.find({ groupAssignmentId: assignment._id });
+    const existingTemplateIds = existingExercises.map((ex) => ex.exerciseTemplateId.toString());
+
+    // Create missing exercises
+    let created = 0;
+    for (let i = 0; i < templates.length; i++) {
+      const templateId = templates[i]._id.toString();
+      if (!existingTemplateIds.includes(templateId)) {
+        await UserExercise.create({
+          userId: assignment.userId,
+          groupAssignmentId: assignment._id,
+          exerciseTemplateId: templates[i]._id,
+          status: i === 0 && existingExercises.length === 0 ? ExerciseStatus.AVAILABLE : ExerciseStatus.LOCKED,
+        });
+        created++;
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `${created} تمرین جدید ایجاد شد`,
+      totalTemplates: templates.length,
+      existingExercises: existingExercises.length,
+      createdExercises: created,
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // ===== EXERCISE TEMPLATE MANAGEMENT =====
 
 // Get all exercise templates
@@ -377,6 +419,35 @@ router.get("/export", async (req: AuthRequest, res) => {
 });
 
 // ===== SETTINGS =====
+
+// Debug endpoint to check templates (temporary)
+router.get("/debug/templates", async (req: AuthRequest, res) => {
+  try {
+    const controlTemplates = await ExerciseTemplate.find({ groupType: GroupType.CONTROL });
+    const interventionTemplates = await ExerciseTemplate.find({ groupType: GroupType.INTERVENTION });
+    const totalUsers = await User.countDocuments({ role: UserRole.CLIENT });
+    const totalAssignments = await GroupAssignment.countDocuments();
+    const totalUserExercises = await UserExercise.countDocuments();
+
+    res.json({
+      success: true,
+      data: {
+        templates: {
+          control: controlTemplates.length,
+          intervention: interventionTemplates.length,
+          total: controlTemplates.length + interventionTemplates.length,
+        },
+        users: totalUsers,
+        assignments: totalAssignments,
+        userExercises: totalUserExercises,
+        controlTemplates: controlTemplates.map((t) => ({ id: t._id, title: t.title, order: t.order })),
+        interventionTemplates: interventionTemplates.map((t) => ({ id: t._id, title: t.title, order: t.order })),
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 // Get admin settings
 router.get("/settings", async (req: AuthRequest, res) => {

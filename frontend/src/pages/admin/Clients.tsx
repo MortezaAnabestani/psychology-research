@@ -111,6 +111,27 @@ const AdminClients: React.FC = () => {
     }
   };
 
+  const handleSyncExercises = async (assignmentId: string) => {
+    if (!window.confirm("آیا مطمئن هستید که می‌خواهید تمرین‌های گمشده را همگام‌سازی کنید؟")) {
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/admin/sync-exercises/${assignmentId}`
+      );
+      alert(res.data.message);
+
+      // Refresh exercises
+      const progressRes = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/admin/clients/${selectedClient._id}/progress`
+      );
+      setClientExercises(progressRes.data.progress);
+    } catch (error: any) {
+      alert(error.response?.data?.message || "خطا در همگام‌سازی تمرین‌ها");
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-4 sm:space-y-6">
@@ -474,13 +495,20 @@ const AdminClients: React.FC = () => {
                 {Object.entries(clientExercises).map(([groupType, data]: [string, any]) => (
                   <div key={groupType} className="border border-gray-200 rounded-lg overflow-hidden">
                     <div
-                      className={`p-4 font-bold text-white ${
+                      className={`p-4 font-bold text-white flex items-center justify-between ${
                         groupType === "control"
                           ? "bg-gradient-to-r from-blue-500 to-blue-600"
                           : "bg-gradient-to-r from-purple-500 to-purple-600"
                       }`}
                     >
-                      {groupType === "control" ? "گروه کنترل - خودپایشی" : "گروه مداخله - تجویز هیجان مثبت"}
+                      <span>{groupType === "control" ? "گروه کنترل - خودپایشی" : "گروه مداخله - تجویز هیجان مثبت"}</span>
+                      <button
+                        onClick={() => handleSyncExercises(data.assignment._id)}
+                        className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded text-sm font-normal transition"
+                        title="همگام‌سازی تمرین‌ها با template ها"
+                      >
+                        🔄 همگام‌سازی
+                      </button>
                     </div>
                     <div className="p-4 space-y-3">
                       {data.exercises && data.exercises.length > 0 ? (
