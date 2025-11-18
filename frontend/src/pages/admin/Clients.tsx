@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import AdminLayout from "../../components/AdminLayout";
-import { Plus, Edit, Trash2, UserPlus, Mail, Clock } from "lucide-react";
+import { Plus, Edit, Trash2, UserPlus, Mail, Clock, Lock, Unlock, ListTodo } from "lucide-react";
 
 const AdminClients: React.FC = () => {
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showExercisesModal, setShowExercisesModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState<any>(null);
+  const [clientExercises, setClientExercises] = useState<any>({});
+  const [loadingExercises, setLoadingExercises] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -68,8 +71,43 @@ const AdminClients: React.FC = () => {
         morningNotificationTime: time,
       });
       alert("کاربر با موفقیت به گروه اختصاص یافت");
+      fetchClients();
     } catch (error: any) {
       alert(error.response?.data?.message || "خطا در اختصاص گروه");
+    }
+  };
+
+  const handleManageExercises = async (client: any) => {
+    setSelectedClient(client);
+    setShowExercisesModal(true);
+    setLoadingExercises(true);
+
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/admin/clients/${client._id}/progress`);
+      setClientExercises(res.data.progress);
+    } catch (error) {
+      console.error("Error fetching exercises:", error);
+      alert("خطا در دریافت تمرین‌های مراجع");
+    } finally {
+      setLoadingExercises(false);
+    }
+  };
+
+  const handleToggleExerciseLock = async (exerciseId: string, currentStatus: string) => {
+    try {
+      const endpoint = currentStatus === "locked" ? "unlock-exercise" : "lock-exercise";
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/admin/${endpoint}`, {
+        userId: selectedClient._id,
+        exerciseId,
+      });
+
+      // Refresh exercises
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/admin/clients/${selectedClient._id}/progress`
+      );
+      setClientExercises(res.data.progress);
+    } catch (error: any) {
+      alert(error.response?.data?.message || "خطا در تغییر وضعیت تمرین");
     }
   };
 
@@ -182,6 +220,13 @@ const AdminClients: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <div className="flex items-center gap-2">
                           <button
+                            onClick={() => handleManageExercises(client)}
+                            className="text-green-600 hover:text-green-800"
+                            title="مدیریت تمرین‌ها"
+                          >
+                            <ListTodo className="w-5 h-5" />
+                          </button>
+                          <button
                             onClick={() => handleAssignGroup(client._id, "control")}
                             className="text-blue-600 hover:text-blue-800"
                             title="اختصاص به گروه کنترل"
@@ -283,6 +328,13 @@ const AdminClients: React.FC = () => {
 
                   <div className="flex flex-wrap gap-2">
                     <button
+                      onClick={() => handleManageExercises(client)}
+                      className="flex-1 min-w-[45%] flex items-center justify-center gap-2 bg-green-50 text-green-700 px-3 py-2 rounded-lg hover:bg-green-100 transition text-sm"
+                    >
+                      <ListTodo className="w-4 h-4" />
+                      مدیریت تمرین‌ها
+                    </button>
+                    <button
                       onClick={() => handleAssignGroup(client._id, "control")}
                       className="flex-1 min-w-[45%] flex items-center justify-center gap-2 bg-blue-50 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-100 transition text-sm"
                     >
@@ -322,7 +374,7 @@ const AdminClients: React.FC = () => {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Modal - Add/Edit Client */}
       {showModal && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -385,6 +437,127 @@ const AdminClients: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal - Manage Exercises */}
+      {showExercisesModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowExercisesModal(false)}
+        >
+          <div
+            className="bg-white rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                مدیریت تمرین‌های {selectedClient?.name}
+              </h2>
+              <button
+                onClick={() => setShowExercisesModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {loadingExercises ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+              </div>
+            ) : Object.keys(clientExercises).length === 0 ? (
+              <div className="text-center py-12 text-gray-500">این کاربر هنوز به هیچ گروهی اختصاص نیافته است</div>
+            ) : (
+              <div className="space-y-6">
+                {Object.entries(clientExercises).map(([groupType, data]: [string, any]) => (
+                  <div key={groupType} className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div
+                      className={`p-4 font-bold text-white ${
+                        groupType === "control"
+                          ? "bg-gradient-to-r from-blue-500 to-blue-600"
+                          : "bg-gradient-to-r from-purple-500 to-purple-600"
+                      }`}
+                    >
+                      {groupType === "control" ? "گروه کنترل - خودپایشی" : "گروه مداخله - تجویز هیجان مثبت"}
+                    </div>
+                    <div className="p-4 space-y-3">
+                      {data.exercises && data.exercises.length > 0 ? (
+                        data.exercises.map((exercise: any) => (
+                          <div
+                            key={exercise._id}
+                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
+                          >
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-gray-700">
+                                  {exercise.exerciseTemplateId?.title || "بدون عنوان"}
+                                </span>
+                                <span
+                                  className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
+                                    exercise.status === "completed"
+                                      ? "bg-green-100 text-green-800"
+                                      : exercise.status === "in_progress"
+                                      ? "bg-yellow-100 text-yellow-800"
+                                      : exercise.status === "available"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : "bg-gray-100 text-gray-800"
+                                  }`}
+                                >
+                                  {exercise.status === "completed"
+                                    ? "تکمیل شده"
+                                    : exercise.status === "in_progress"
+                                    ? "در حال انجام"
+                                    : exercise.status === "available"
+                                    ? "در دسترس"
+                                    : "قفل"}
+                                </span>
+                              </div>
+                              {exercise.completedAt && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  تکمیل شده در: {new Date(exercise.completedAt).toLocaleDateString("fa-IR")}
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => handleToggleExerciseLock(exercise._id, exercise.status)}
+                              className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition ${
+                                exercise.status === "locked"
+                                  ? "bg-green-50 text-green-700 hover:bg-green-100"
+                                  : "bg-orange-50 text-orange-700 hover:bg-orange-100"
+                              }`}
+                              disabled={exercise.status === "completed"}
+                              title={
+                                exercise.status === "completed"
+                                  ? "تمرین تکمیل شده را نمی‌توان قفل کرد"
+                                  : exercise.status === "locked"
+                                  ? "باز کردن قفل"
+                                  : "قفل کردن"
+                              }
+                            >
+                              {exercise.status === "locked" ? (
+                                <>
+                                  <Unlock className="w-4 h-4" />
+                                  باز کردن قفل
+                                </>
+                              ) : (
+                                <>
+                                  <Lock className="w-4 h-4" />
+                                  قفل کردن
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center text-gray-500 py-4">تمرینی یافت نشد</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

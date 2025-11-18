@@ -78,25 +78,8 @@ router.post("/:id/response", async (req: AuthRequest, res) => {
       exercise.status = ExerciseStatus.COMPLETED;
       exercise.completedAt = new Date();
 
-      // Unlock next exercise
-      const template = await ExerciseTemplate.findById(exercise.exerciseTemplateId);
-      if (template) {
-        const nextTemplate = await ExerciseTemplate.findOne({
-          groupType: template.groupType,
-          order: template.order + 1,
-        });
-
-        if (nextTemplate) {
-          await UserExercise.findOneAndUpdate(
-            {
-              userId: req.user!.id,
-              groupAssignmentId: exercise.groupAssignmentId,
-              exerciseTemplateId: nextTemplate._id,
-            },
-            { status: ExerciseStatus.AVAILABLE }
-          );
-        }
-      }
+      // Note: Unlocking next exercise is now controlled by admin
+      // The admin must manually unlock exercises for users
     }
 
     await exercise.save();

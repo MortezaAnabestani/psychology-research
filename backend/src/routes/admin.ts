@@ -221,6 +221,23 @@ router.post("/unlock-exercise", async (req: AuthRequest, res) => {
   }
 });
 
+// Lock specific exercise for user
+router.post("/lock-exercise", async (req: AuthRequest, res) => {
+  try {
+    const { userId, exerciseId } = req.body;
+
+    const exercise = await UserExercise.findByIdAndUpdate(
+      exerciseId,
+      { status: ExerciseStatus.LOCKED },
+      { new: true }
+    );
+
+    res.json({ success: true, exercise });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // ===== STATISTICS & ANALYTICS =====
 
 // Get dashboard statistics
