@@ -92,6 +92,29 @@ router.delete("/clients/:id", async (req: AuthRequest, res) => {
   }
 });
 
+// Reset client password (Admin only - no old password required)
+router.put("/clients/:id/reset-password", async (req: AuthRequest, res) => {
+  try {
+    const { newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: "رمز عبور باید حداقل ۶ کاراکتر باشد" });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "کاربر یافت نشد" });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ success: true, message: "رمز عبور با موفقیت تغییر یافت" });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // ===== GROUP ASSIGNMENT =====
 
 // Assign client to group

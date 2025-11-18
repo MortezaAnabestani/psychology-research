@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Home, Bell, LogOut } from "lucide-react";
+import { Home, Bell, LogOut, Settings } from "lucide-react";
 import { useNotifications } from "../context/NotificationContext";
 
 interface ClientLayoutProps {
@@ -41,6 +41,9 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
                   </span>
                 )}
               </button>
+              <Link to="/settings" className="p-1.5 sm:p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">
+                <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
+              </Link>
               <button onClick={handleLogout} className="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 rounded-lg transition">
                 <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>

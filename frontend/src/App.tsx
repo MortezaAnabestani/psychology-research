@@ -8,7 +8,9 @@ import AdminClients from "./pages/admin/Clients";
 import AdminResponses from "./pages/admin/Responses";
 import AdminTemplates from "./pages/admin/Templates";
 import AdminStatistics from "./pages/admin/Statistics";
+import AdminSettings from "./pages/admin/Settings";
 import ClientDashboard from "./pages/client/Dashboard";
+import ClientSettings from "./pages/client/Settings";
 import ExercisePage from "./pages/client/ExercisePage";
 
 function App() {
@@ -60,6 +62,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/admin/settings"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminSettings />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Client Routes */}
             <Route
@@ -67,6 +77,14 @@ function App() {
               element={
                 <ProtectedRoute requiredRole="client">
                   <ClientDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute requiredRole="client">
+                  <ClientSettings />
                 </ProtectedRoute>
               }
             />
