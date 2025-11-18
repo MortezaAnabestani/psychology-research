@@ -8,6 +8,8 @@ import { Notification } from "../models/Notification";
 import { AdminSettings } from "../models/AdminSettings";
 import ExcelJS from "exceljs";
 import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType, AlignmentType } from "docx";
+import { sendEmail } from "../config/email";
+import { SMSService } from "../services/smsService";
 
 const router = express.Router();
 
@@ -688,6 +690,97 @@ router.get("/export-word", async (req: AuthRequest, res) => {
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
     res.setHeader("Content-Disposition", "attachment; filename=research-data.docx");
     res.send(buffer);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ===== BULK MESSAGING =====
+
+// Send bulk message to clients
+router.post("/send-bulk-message", async (req: AuthRequest, res) => {
+  try {
+    const { message, subject, groupType, messageType } = req.body;
+
+    // Validation
+    if (!message || !messageType) {
+      return res.status(400).json({ message: "پیام و نوع ارسال الزامی است" });
+    }
+
+    // Build query based on group filter
+    let query: any = { role: UserRole.CLIENT, isActive: true };
+
+    let users: any[] = [];
+
+    if (groupType && groupType !== "all") {
+      // Filter by specific group
+      const groupAssignments = await GroupAssignment.find({
+        groupType,
+        isActive: true,
+      }).select("userId");
+
+      const userIds = groupAssignments.map((ga) => ga.userId);
+      users = await User.find({ _id: { $in: userIds }, isActive: true });
+    } else {
+      // All active clients
+      users = await User.find(query);
+    }
+
+    if (users.length === 0) {
+      return res.status(400).json({ message: "کاربری برای ارسال پیام یافت نشد" });
+    }
+
+    let emailSent = 0;
+    let smsSent = 0;
+    let errors = 0;
+
+    // Send messages based on type
+    for (const user of users) {
+      try {
+        // Send Email
+        if (messageType === "email" || messageType === "both") {
+          await sendEmail(
+            user.email,
+            subject || "پیام از پژوهش روانشناسی",
+            `
+              <div dir="rtl" style="font-family: Tahoma, Arial;">
+                <h2>سلام ${user.name} عزیز</h2>
+                <p style="line-height: 1.8; white-space: pre-wrap;">${message}</p>
+                <br/>
+                <p style="color: #666; font-size: 14px;">با تشکر،<br/>تیم پژوهش روانشناسی</p>
+              </div>
+            `
+          );
+          emailSent++;
+        }
+
+        // Send SMS
+        if (messageType === "sms" || messageType === "both") {
+          if (user.phone) {
+            const success = await SMSService.sendSMS(user.phone, message);
+            if (success) {
+              smsSent++;
+            } else {
+              errors++;
+            }
+          }
+        }
+      } catch (error) {
+        console.error(`Error sending to user ${user.email}:`, error);
+        errors++;
+      }
+    }
+
+    res.json({
+      success: true,
+      message: "پیام‌ها با موفقیت ارسال شدند",
+      stats: {
+        totalUsers: users.length,
+        emailSent,
+        smsSent,
+        errors,
+      },
+    });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

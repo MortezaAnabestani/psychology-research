@@ -9,6 +9,7 @@ import AdminResponses from "./pages/admin/Responses";
 import AdminTemplates from "./pages/admin/Templates";
 import AdminStatistics from "./pages/admin/Statistics";
 import AdminSettings from "./pages/admin/Settings";
+import BulkMessage from "./pages/admin/BulkMessage";
 import ClientDashboard from "./pages/client/Dashboard";
 import ClientSettings from "./pages/client/Settings";
 import ExercisePage from "./pages/client/ExercisePage";
@@ -67,6 +68,14 @@ function App() {
               element={
                 <ProtectedRoute requiredRole="admin">
                   <AdminSettings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/bulk-message"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <BulkMessage />
                 </ProtectedRoute>
               }
             />
