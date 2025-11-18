@@ -42,7 +42,7 @@ router.get("/clients", async (req: AuthRequest, res) => {
 // Create new client
 router.post("/clients", async (req: AuthRequest, res) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, phone } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -53,6 +53,7 @@ router.post("/clients", async (req: AuthRequest, res) => {
       email,
       password,
       name,
+      phone,
       role: UserRole.CLIENT,
     });
 
@@ -68,11 +69,11 @@ router.post("/clients", async (req: AuthRequest, res) => {
 // Update client
 router.put("/clients/:id", async (req: AuthRequest, res) => {
   try {
-    const { name, isActive, preferences } = req.body;
+    const { name, phone, isActive, preferences } = req.body;
 
     const client = await User.findByIdAndUpdate(
       req.params.id,
-      { name, isActive, preferences },
+      { name, phone, isActive, preferences },
       { new: true }
     ).select("-password");
 

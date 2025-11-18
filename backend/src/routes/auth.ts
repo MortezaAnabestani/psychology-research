@@ -129,9 +129,9 @@ router.put("/change-password", authenticate, async (req: any, res) => {
 // Update Profile
 router.put("/profile", authenticate, async (req: any, res) => {
   try {
-    const { name, preferences } = req.body;
+    const { name, phone, preferences } = req.body;
 
-    const user = await User.findByIdAndUpdate(req.user.id, { name, preferences }, { new: true }).select(
+    const user = await User.findByIdAndUpdate(req.user.id, { name, phone, preferences }, { new: true }).select(
       "-password"
     );
 

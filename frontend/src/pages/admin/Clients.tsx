@@ -14,6 +14,7 @@ const AdminClients: React.FC = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
     password: "",
   });
 
@@ -41,7 +42,7 @@ const AdminClients: React.FC = () => {
         await axios.post(`${process.env.REACT_APP_API_URL}/api/admin/clients`, formData);
       }
       setShowModal(false);
-      setFormData({ name: "", email: "", password: "" });
+      setFormData({ name: "", email: "", phone: "", password: "" });
       setSelectedClient(null);
       fetchClients();
     } catch (error) {
@@ -162,6 +163,7 @@ const AdminClients: React.FC = () => {
                   <tr>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">نام</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">ایمیل</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">شماره موبایل</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       تاریخ ثبت‌نام
                     </th>
@@ -186,6 +188,9 @@ const AdminClients: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{client.email}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900" dir="ltr">{client.phone || "-"}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(client.createdAt).toLocaleDateString("fa-IR")}
@@ -264,7 +269,7 @@ const AdminClients: React.FC = () => {
                           <button
                             onClick={() => {
                               setSelectedClient(client);
-                              setFormData({ name: client.name, email: client.email, password: "" });
+                              setFormData({ name: client.name, email: client.email, phone: client.phone || "", password: "" });
                               setShowModal(true);
                             }}
                             className="text-indigo-600 hover:text-indigo-800"
@@ -297,6 +302,9 @@ const AdminClients: React.FC = () => {
                       <div>
                         <div className="text-base font-semibold text-gray-900">{client.name}</div>
                         <div className="text-sm text-gray-600">{client.email}</div>
+                        {client.phone && (
+                          <div className="text-xs text-gray-500" dir="ltr">{client.phone}</div>
+                        )}
                       </div>
                     </div>
                     <span
@@ -372,7 +380,7 @@ const AdminClients: React.FC = () => {
                     <button
                       onClick={() => {
                         setSelectedClient(client);
-                        setFormData({ name: client.name, email: client.email, password: "" });
+                        setFormData({ name: client.name, email: client.email, phone: client.phone || "", password: "" });
                         setShowModal(true);
                       }}
                       className="flex items-center justify-center gap-2 bg-indigo-50 text-indigo-700 px-3 py-2 rounded-lg hover:bg-indigo-100 transition text-sm"
@@ -426,6 +434,18 @@ const AdminClients: React.FC = () => {
                   required
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">شماره موبایل</label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  placeholder="09123456789"
+                  dir="ltr"
+                />
+                <p className="text-xs text-gray-500 mt-1">برای ارسال پیام‌های خودکار ضروری است</p>
+              </div>
               {!selectedClient && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">رمز عبور</label>
@@ -450,7 +470,7 @@ const AdminClients: React.FC = () => {
                   onClick={() => {
                     setShowModal(false);
                     setSelectedClient(null);
-                    setFormData({ name: "", email: "", password: "" });
+                    setFormData({ name: "", email: "", phone: "", password: "" });
                   }}
                   className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300"
                 >

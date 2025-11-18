@@ -10,6 +10,7 @@ const AdminSettings: React.FC = () => {
 
   // Profile form
   const [name, setName] = useState(user?.name || "");
+  const [phone, setPhone] = useState(user?.phone || "");
   const [savingProfile, setSavingProfile] = useState(false);
 
   // Password form
@@ -24,6 +25,7 @@ const AdminSettings: React.FC = () => {
     try {
       const res = await axios.put(`${process.env.REACT_APP_API_URL}/api/auth/profile`, {
         name,
+        phone,
       });
       setUser(res.data.user);
       alert("پروفایل با موفقیت به‌روزرسانی شد");
@@ -125,6 +127,21 @@ const AdminSettings: React.FC = () => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
                   />
                   <p className="text-xs text-gray-500 mt-1">ایمیل قابل تغییر نیست</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    شماره موبایل
+                  </label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="09123456789"
+                    dir="ltr"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">برای دریافت پیام‌های خودکار</p>
                 </div>
 
                 <div>
