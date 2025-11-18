@@ -7,6 +7,7 @@ import { UserExercise, ExerciseStatus } from "../models/UserExercise";
 import { Notification } from "../models/Notification";
 import { AdminSettings } from "../models/AdminSettings";
 import ExcelJS from "exceljs";
+import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType, AlignmentType } from "docx";
 
 const router = express.Router();
 
@@ -355,6 +356,75 @@ router.get("/clients/:id/progress", async (req: AuthRequest, res) => {
 
 // ===== DATA EXPORT =====
 
+// Get all responses with details
+router.get("/responses", async (req: AuthRequest, res) => {
+  try {
+    const { clientId, groupType, templateId } = req.query;
+
+    // Build filter
+    const filter: any = {};
+    if (clientId) filter.userId = clientId;
+
+    const exercises = await UserExercise.find(filter)
+      .populate("userId", "name email")
+      .populate("exerciseTemplateId")
+      .populate("groupAssignmentId")
+      .sort("-completedAt");
+
+    // Filter by groupType if provided
+    let filteredExercises = exercises;
+    if (groupType) {
+      filteredExercises = exercises.filter((ex: any) => ex.groupAssignmentId?.groupType === groupType);
+    }
+    if (templateId) {
+      filteredExercises = exercises.filter((ex: any) => ex.exerciseTemplateId?._id.toString() === templateId);
+    }
+
+    // Format responses
+    const formattedResponses = filteredExercises
+      .filter((ex: any) => ex.responses && ex.responses.length > 0)
+      .map((ex: any) => ({
+        _id: ex._id,
+        client: {
+          _id: ex.userId._id,
+          name: ex.userId.name,
+          email: ex.userId.email,
+        },
+        group: {
+          type: ex.groupAssignmentId?.groupType || "N/A",
+          name:
+            ex.groupAssignmentId?.groupType === "control" ? "گروه کنترل - خودپایشی" : "گروه مداخله - تجویز هیجان مثبت",
+        },
+        exercise: {
+          _id: ex.exerciseTemplateId?._id,
+          title: ex.exerciseTemplateId?.title || "N/A",
+          order: ex.exerciseTemplateId?.order,
+        },
+        status: ex.status,
+        startedAt: ex.startedAt,
+        completedAt: ex.completedAt,
+        responses: ex.responses.map((r: any) => {
+          const field = ex.exerciseTemplateId?.fields?.find((f: any) => f.id === r.fieldId);
+          return {
+            fieldId: r.fieldId,
+            fieldLabel: field?.label || r.fieldId,
+            fieldType: field?.type || "unknown",
+            value: r.value,
+            answeredAt: r.answeredAt,
+          };
+        }),
+      }));
+
+    res.json({
+      success: true,
+      count: formattedResponses.length,
+      responses: formattedResponses,
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Export all data to Excel
 router.get("/export", async (req: AuthRequest, res) => {
   try {
@@ -413,11 +483,187 @@ router.get("/export", async (req: AuthRequest, res) => {
       });
     });
 
+    // Detailed Responses Sheet
+    const responsesSheet = workbook.addWorksheet("پاسخ‌های تفصیلی");
+    responsesSheet.columns = [
+      { header: "نام مراجع", key: "clientName", width: 20 },
+      { header: "ایمیل", key: "email", width: 30 },
+      { header: "گروه", key: "groupType", width: 15 },
+      { header: "تمرین", key: "exerciseTitle", width: 30 },
+      { header: "شماره تمرین", key: "order", width: 15 },
+      { header: "سوال", key: "question", width: 40 },
+      { header: "نوع سوال", key: "questionType", width: 15 },
+      { header: "پاسخ", key: "answer", width: 50 },
+      { header: "تاریخ پاسخ", key: "answeredAt", width: 20 },
+    ];
+
+    exercises.forEach((ex: any) => {
+      if (ex.responses && ex.responses.length > 0) {
+        ex.responses.forEach((response: any) => {
+          const field = ex.exerciseTemplateId.fields?.find((f: any) => f.id === response.fieldId);
+          responsesSheet.addRow({
+            clientName: ex.userId.name,
+            email: ex.userId.email,
+            groupType: ex.groupAssignmentId.groupType === "control" ? "کنترل" : "مداخله",
+            exerciseTitle: ex.exerciseTemplateId.title,
+            order: ex.exerciseTemplateId.order,
+            question: field?.label || response.fieldId,
+            questionType: field?.type || "unknown",
+            answer: response.value,
+            answeredAt: response.answeredAt ? new Date(response.answeredAt).toLocaleString("fa-IR") : "",
+          });
+        });
+      }
+    });
+
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", "attachment; filename=research-data.xlsx");
 
     await workbook.xlsx.write(res);
     res.end();
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Export all data to Word
+router.get("/export-word", async (req: AuthRequest, res) => {
+  try {
+    const exercises = await UserExercise.find()
+      .populate("userId")
+      .populate("exerciseTemplateId")
+      .populate("groupAssignmentId")
+      .sort("userId");
+
+    const sections: any[] = [];
+
+    // Title
+    sections.push(
+      new Paragraph({
+        text: "گزارش جامع پژوهش روانشناسی",
+        heading: "Heading1",
+        alignment: AlignmentType.RIGHT,
+        spacing: { after: 400 },
+      })
+    );
+
+    sections.push(
+      new Paragraph({
+        text: `تاریخ تهیه گزارش: ${new Date().toLocaleDateString("fa-IR")}`,
+        alignment: AlignmentType.RIGHT,
+        spacing: { after: 600 },
+      })
+    );
+
+    // Group by client
+    const clientsMap = new Map();
+    exercises.forEach((ex: any) => {
+      const clientId = ex.userId._id.toString();
+      if (!clientsMap.has(clientId)) {
+        clientsMap.set(clientId, {
+          info: ex.userId,
+          exercises: [],
+        });
+      }
+      clientsMap.get(clientId).exercises.push(ex);
+    });
+
+    // Create content for each client
+    for (const [clientId, data] of clientsMap) {
+      // Client header
+      sections.push(
+        new Paragraph({
+          text: `مراجع: ${data.info.name}`,
+          heading: "Heading2",
+          alignment: AlignmentType.RIGHT,
+          spacing: { before: 400, after: 200 },
+        })
+      );
+
+      sections.push(
+        new Paragraph({
+          text: `ایمیل: ${data.info.email}`,
+          alignment: AlignmentType.RIGHT,
+          spacing: { after: 300 },
+        })
+      );
+
+      // Exercises for this client
+      data.exercises.forEach((ex: any) => {
+        if (ex.responses && ex.responses.length > 0) {
+          sections.push(
+            new Paragraph({
+              text: `${ex.groupAssignmentId?.groupType === "control" ? "گروه کنترل" : "گروه مداخله"} - ${
+                ex.exerciseTemplateId.title
+              }`,
+              heading: "Heading3",
+              alignment: AlignmentType.RIGHT,
+              spacing: { before: 300, after: 200 },
+            })
+          );
+
+          if (ex.completedAt) {
+            sections.push(
+              new Paragraph({
+                text: `تاریخ تکمیل: ${new Date(ex.completedAt).toLocaleDateString("fa-IR")}`,
+                alignment: AlignmentType.RIGHT,
+                spacing: { after: 200 },
+              })
+            );
+          }
+
+          // Responses
+          ex.responses.forEach((response: any, idx: number) => {
+            const field = ex.exerciseTemplateId.fields?.find((f: any) => f.id === response.fieldId);
+
+            sections.push(
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: `${idx + 1}. ${field?.label || response.fieldId}`,
+                    bold: true,
+                  }),
+                ],
+                alignment: AlignmentType.RIGHT,
+                spacing: { before: 150, after: 100 },
+              })
+            );
+
+            sections.push(
+              new Paragraph({
+                text: response.value || "(بدون پاسخ)",
+                alignment: AlignmentType.RIGHT,
+                spacing: { after: 200 },
+                indent: { right: 300 },
+              })
+            );
+          });
+
+          sections.push(
+            new Paragraph({
+              text: "────────────────────────────",
+              alignment: AlignmentType.CENTER,
+              spacing: { before: 200, after: 200 },
+            })
+          );
+        }
+      });
+    }
+
+    const doc = new Document({
+      sections: [
+        {
+          properties: {},
+          children: sections,
+        },
+      ],
+    });
+
+    const buffer = await Packer.toBuffer(doc);
+
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+    res.setHeader("Content-Disposition", "attachment; filename=research-data.docx");
+    res.send(buffer);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

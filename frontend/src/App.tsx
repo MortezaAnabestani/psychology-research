@@ -5,6 +5,7 @@ import ProtectedRoute from "../../frontend/src/components/ProtectedRoute";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminClients from "./pages/admin/Clients";
+import AdminResponses from "./pages/admin/Responses";
 import AdminTemplates from "./pages/admin/Templates";
 import AdminStatistics from "./pages/admin/Statistics";
 import ClientDashboard from "./pages/client/Dashboard";
@@ -32,6 +33,14 @@ function App() {
               element={
                 <ProtectedRoute requiredRole="admin">
                   <AdminClients />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/responses"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminResponses />
                 </ProtectedRoute>
               }
             />
