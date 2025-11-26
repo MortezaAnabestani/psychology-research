@@ -84,7 +84,9 @@ const AdminClients: React.FC = () => {
     setLoadingExercises(true);
 
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/admin/clients/${client._id}/progress`);
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/admin/clients/${client._id}/progress`
+      );
       setClientExercises(res.data.progress);
     } catch (error) {
       console.error("Error fetching exercises:", error);
@@ -157,20 +159,32 @@ const AdminClients: React.FC = () => {
         ) : (
           <>
             {/* Desktop Table View */}
-            <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 w-full overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">نام</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">ایمیل</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">شماره موبایل</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      ایمیل
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      شماره موبایل
+                    </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       تاریخ ثبت‌نام
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">وضعیت</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">گروه‌ها</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">زمان انتخابی</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">عملیات</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      وضعیت
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      گروه‌ها
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      زمان انتخابی
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      عملیات
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -190,7 +204,9 @@ const AdminClients: React.FC = () => {
                         <div className="text-sm text-gray-900">{client.email}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900" dir="ltr">{client.phone || "-"}</div>
+                        <div className="text-sm text-gray-900" dir="ltr">
+                          {client.phone || "-"}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(client.createdAt).toLocaleDateString("fa-IR")}
@@ -269,7 +285,12 @@ const AdminClients: React.FC = () => {
                           <button
                             onClick={() => {
                               setSelectedClient(client);
-                              setFormData({ name: client.name, email: client.email, phone: client.phone || "", password: "" });
+                              setFormData({
+                                name: client.name,
+                                email: client.email,
+                                phone: client.phone || "",
+                                password: "",
+                              });
                               setShowModal(true);
                             }}
                             className="text-indigo-600 hover:text-indigo-800"
@@ -303,7 +324,9 @@ const AdminClients: React.FC = () => {
                         <div className="text-base font-semibold text-gray-900">{client.name}</div>
                         <div className="text-sm text-gray-600">{client.email}</div>
                         {client.phone && (
-                          <div className="text-xs text-gray-500" dir="ltr">{client.phone}</div>
+                          <div className="text-xs text-gray-500" dir="ltr">
+                            {client.phone}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -380,7 +403,12 @@ const AdminClients: React.FC = () => {
                     <button
                       onClick={() => {
                         setSelectedClient(client);
-                        setFormData({ name: client.name, email: client.email, phone: client.phone || "", password: "" });
+                        setFormData({
+                          name: client.name,
+                          email: client.email,
+                          phone: client.phone || "",
+                          password: "",
+                        });
                         setShowModal(true);
                       }}
                       className="flex items-center justify-center gap-2 bg-indigo-50 text-indigo-700 px-3 py-2 rounded-lg hover:bg-indigo-100 transition text-sm"
@@ -493,9 +521,7 @@ const AdminClients: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                مدیریت تمرین‌های {selectedClient?.name}
-              </h2>
+              <h2 className="text-2xl font-bold text-gray-900">مدیریت تمرین‌های {selectedClient?.name}</h2>
               <button
                 onClick={() => setShowExercisesModal(false)}
                 className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -509,7 +535,9 @@ const AdminClients: React.FC = () => {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
               </div>
             ) : Object.keys(clientExercises).length === 0 ? (
-              <div className="text-center py-12 text-gray-500">این کاربر هنوز به هیچ گروهی اختصاص نیافته است</div>
+              <div className="text-center py-12 text-gray-500">
+                این کاربر هنوز به هیچ گروهی اختصاص نیافته است
+              </div>
             ) : (
               <div className="space-y-6">
                 {Object.entries(clientExercises).map(([groupType, data]: [string, any]) => (
@@ -521,7 +549,9 @@ const AdminClients: React.FC = () => {
                           : "bg-gradient-to-r from-purple-500 to-purple-600"
                       }`}
                     >
-                      <span>{groupType === "control" ? "گروه کنترل - خودپایشی" : "گروه مداخله - تجویز هیجان مثبت"}</span>
+                      <span>
+                        {groupType === "control" ? "گروه کنترل - خودپایشی" : "گروه مداخله - تجویز هیجان مثبت"}
+                      </span>
                       <button
                         onClick={() => handleSyncExercises(data.assignment._id)}
                         className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded text-sm font-normal transition"

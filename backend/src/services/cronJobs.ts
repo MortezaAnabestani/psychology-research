@@ -1,6 +1,11 @@
 import cron from "node-cron";
 import { Notification } from "../models/Notification";
 import { NotificationService } from "./notificationService";
+import { ExerciseTemplate } from "../models/ExerciseTemplate";
+import { UserExercise, ExerciseStatus } from "../models/UserExercise";
+import { User } from "../models/User";
+import { SMSService } from "./smsService";
+import { sendEmail } from "../config/email";
 
 export function startCronJobs() {
   // Check for pending notifications every minute
@@ -61,5 +66,83 @@ export function startCronJobs() {
     }
   });
 
-  console.log("✅ Cron jobs started");
+  // Send motivational SMS twice daily at random times (9 AM - 9 PM)
+  // Check every hour during working hours (9 AM - 9 PM) and send based on random logic
+  let motivationalSMSSentToday = {
+    first: false,
+    second: false,
+    date: new Date().toDateString(),
+  };
+
+  cron.schedule("0 9-21 * * *", async () => {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentDate = now.toDateString();
+
+    // Reset daily flags
+    if (currentDate !== motivationalSMSSentToday.date) {
+      motivationalSMSSentToday = {
+        first: false,
+        second: false,
+        date: currentDate,
+      };
+    }
+
+    // First wave: between 9 AM - 3 PM
+    if (currentHour >= 9 && currentHour < 15 && !motivationalSMSSentToday.first) {
+      const shouldSend = Math.random() < 0.3; // 30% chance each hour
+      if (shouldSend) {
+        await sendMotivationalSMS();
+        motivationalSMSSentToday.first = true;
+        console.log(`📱 First wave motivational SMS sent at ${now.toLocaleTimeString()}`);
+      }
+    }
+
+    // Second wave: between 3 PM - 9 PM
+    if (currentHour >= 15 && currentHour < 21 && !motivationalSMSSentToday.second) {
+      const shouldSend = Math.random() < 0.3; // 30% chance each hour
+      if (shouldSend) {
+        await sendMotivationalSMS();
+        motivationalSMSSentToday.second = true;
+        console.log(`📱 Second wave motivational SMS sent at ${now.toLocaleTimeString()}`);
+      }
+    }
+  });
+
+  console.log(`✅ Cron jobs started`);
+  console.log(`📱 Motivational SMS will be sent randomly twice daily during working hours (9-21)`);
+}
+
+async function sendMotivationalSMS() {
+  try {
+    // Find all templates with motivational SMS enabled
+    const templates = await ExerciseTemplate.find({
+      "motivationalSMS.enabled": true,
+    });
+
+    for (const template of templates) {
+      if (!template.motivationalSMS?.message) continue;
+
+      // Find all active user exercises for this template
+      const activeExercises = await UserExercise.find({
+        exerciseTemplateId: template._id,
+        status: { $in: [ExerciseStatus.AVAILABLE, ExerciseStatus.IN_PROGRESS] },
+      }).populate("userId");
+
+      for (const exercise of activeExercises) {
+        const user: any = exercise.userId;
+
+        if (!user?.phone) continue;
+
+        try {
+          await SMSService.sendSMS(user.phone, template.motivationalSMS.message);
+          console.log(`✅ Motivational SMS sent to ${user.phone} for template ${template.title}`);
+        } catch (error) {
+          console.error(`❌ Failed to send motivational SMS to ${user.phone}:`, error);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Motivational SMS cron job error:", error);
+  }
 }

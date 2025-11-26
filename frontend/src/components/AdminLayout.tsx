@@ -1,7 +1,19 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { LayoutDashboard, Users, ClipboardList, BarChart3, Settings, LogOut, Bell, Menu, X, MessageSquare, Send } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  ClipboardList,
+  BarChart3,
+  Settings,
+  LogOut,
+  Bell,
+  Menu,
+  X,
+  MessageSquare,
+  Send,
+} from "lucide-react";
 import { useNotifications } from "../context/NotificationContext";
 
 interface AdminLayoutProps {
@@ -19,7 +31,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { path: "/admin", icon: LayoutDashboard, label: "داشبورد" },
     { path: "/admin/clients", icon: Users, label: "مراجعان" },
     { path: "/admin/responses", icon: MessageSquare, label: "پاسخ‌های مراجعان" },
-    { path: "/admin/bulk-message", icon: Send, label: "ارسال دسته‌ای" },
+    { path: "/admin/bulk-message", icon: Send, label: "ارسال پیام" },
     { path: "/admin/templates", icon: ClipboardList, label: "قالب‌های تمرین" },
     { path: "/admin/statistics", icon: BarChart3, label: "گزارش‌ها و آمار" },
     { path: "/admin/settings", icon: Settings, label: "تنظیمات" },

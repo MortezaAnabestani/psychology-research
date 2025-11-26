@@ -65,7 +65,7 @@ export class SMSService {
   static async sendTemplateSMS(
     phoneNumber: string,
     templateName: string,
-    tokens: { [key: string]: string }
+    tokens: { token: string; [key: string]: string }
   ): Promise<boolean> {
     try {
       if (!phoneNumber || !templateName) {

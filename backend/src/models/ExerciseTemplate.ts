@@ -44,6 +44,10 @@ export interface IExerciseTemplate extends Document {
     order: number;
   }>;
   completionMessage?: string;
+  motivationalSMS?: {
+    enabled: boolean;
+    message: string;
+  };
   isCustom: boolean;
   createdBy: string;
   createdAt: Date;
@@ -82,6 +86,10 @@ const exerciseTemplateSchema = new Schema<IExerciseTemplate>(
       },
     ],
     completionMessage: String,
+    motivationalSMS: {
+      enabled: { type: Boolean, default: false },
+      message: { type: String },
+    },
     isCustom: { type: Boolean, default: false },
     createdBy: { type: String, ref: "User" },
   },

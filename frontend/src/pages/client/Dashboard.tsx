@@ -2,7 +2,19 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import ClientLayout from "../../components/ClientLayout";
-import { ClipboardList, Lock, CheckCircle2, Clock, TrendingUp, Award, Target, Sparkles, ChevronDown, ChevronUp, Bell } from "lucide-react";
+import {
+  ClipboardList,
+  Lock,
+  CheckCircle2,
+  Clock,
+  TrendingUp,
+  Award,
+  Target,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+  Bell,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const ClientDashboard: React.FC = () => {
@@ -153,6 +165,10 @@ const ClientDashboard: React.FC = () => {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">سلام {user?.name} عزیز!</h1>
             </div>
             <p className="text-indigo-100 text-sm sm:text-base lg:text-lg">به داشبورد شخصی خود خوش آمدید</p>
+            <p className="text-indigo-100 text-xs sm:text-sm lg:text-md">
+              توجه: با سپاس از همراهی شما، اگر هنوز شمارۀ همراه خود را وارد نکرده‌اید، حتماً از قسمت تنظیمات
+              به واردکردن شمارۀ خود اقدام کنید{" "}
+            </p>
           </div>
         </div>
 
@@ -185,7 +201,9 @@ const ClientDashboard: React.FC = () => {
                   </div>
                   <p className="text-xs sm:text-sm text-gray-600 font-medium">کل تمرین‌ها</p>
                 </div>
-                <p className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">{dashboardData?.statistics?.total}</p>
+                <p className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">
+                  {dashboardData?.statistics?.total}
+                </p>
               </div>
             </div>
           </div>
@@ -277,14 +295,19 @@ const ClientDashboard: React.FC = () => {
                         <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-bold text-orange-900 mb-2 text-sm sm:text-base">⏰ زمان دریافت پیام صبحگاهی</h3>
+                        <h3 className="font-bold text-orange-900 mb-2 text-sm sm:text-base">
+                          ⏰ زمان دریافت پیام صبحگاهی
+                        </h3>
                         <p className="text-xs sm:text-sm text-gray-700 leading-relaxed mb-4">
-                          لطفاً ساعت دلخواه خود را برای دریافت پیام‌های یادآوری صبحگاهی انتخاب کنید (بین ساعت ۷ تا ۱۱:۳۰
-                          صبح). این پیام‌ها شما را به انجام تمرین‌های روزانه دعوت می‌کنند.
+                          لطفاً ساعت دلخواه خود را برای دریافت پیام‌های یادآوری صبحگاهی انتخاب کنید (بین ساعت
+                          ۷ تا ۱۱:۳۰ صبح). این پیام‌ها شما را به انجام تمرین‌های روزانه دعوت می‌کنند.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
                           <div className="flex items-center gap-2 flex-1 max-w-xs">
-                            <label htmlFor={`time-${groupType}`} className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                            <label
+                              htmlFor={`time-${groupType}`}
+                              className="text-sm font-medium text-gray-700 whitespace-nowrap"
+                            >
                               ساعت انتخابی:
                             </label>
                             <input

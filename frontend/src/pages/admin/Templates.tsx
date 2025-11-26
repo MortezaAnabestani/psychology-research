@@ -16,6 +16,10 @@ const Templates: React.FC = () => {
     description: "",
     instructions: "",
     completionMessage: "",
+    motivationalSMS: {
+      enabled: false,
+      message: "",
+    },
     fields: [] as any[],
   });
 
@@ -103,6 +107,10 @@ const Templates: React.FC = () => {
       description: "",
       instructions: "",
       completionMessage: "",
+      motivationalSMS: {
+        enabled: false,
+        message: "",
+      },
       fields: [],
     });
     setSelectedTemplate(null);
@@ -117,6 +125,10 @@ const Templates: React.FC = () => {
       description: template.description,
       instructions: template.instructions,
       completionMessage: template.completionMessage || "",
+      motivationalSMS: template.motivationalSMS || {
+        enabled: false,
+        message: "",
+      },
       fields: template.fields || [],
     });
     setShowModal(true);
@@ -298,6 +310,57 @@ const Templates: React.FC = () => {
                   rows={2}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                 />
+              </div>
+
+              {/* Motivational SMS Section */}
+              <div className="border border-indigo-200 bg-indigo-50 rounded-lg p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <input
+                    type="checkbox"
+                    id="motivationalSMS"
+                    checked={formData.motivationalSMS.enabled}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        motivationalSMS: {
+                          ...formData.motivationalSMS,
+                          enabled: e.target.checked,
+                        },
+                      })
+                    }
+                    className="w-5 h-5 text-indigo-600 rounded"
+                  />
+                  <label htmlFor="motivationalSMS" className="text-sm font-medium text-gray-900">
+                    فعال‌سازی پیامک‌های انگیزشی روزانه
+                  </label>
+                </div>
+
+                {formData.motivationalSMS.enabled && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      متن پیامک انگیزشی
+                    </label>
+                    <textarea
+                      value={formData.motivationalSMS.message}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          motivationalSMS: {
+                            ...formData.motivationalSMS,
+                            message: e.target.value,
+                          },
+                        })
+                      }
+                      rows={3}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                      placeholder="این پیامک دوبار در روز در ساعات کاری و به صورت تصادفی برای افرادی که این تمرین فعال دارند ارسال می‌شود..."
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      این پیامک دوبار در روز (در ساعات کاری 9-21) با فواصل زمانی تصادفی برای
+                      کاربرانی که این تمرین فعال دارند ارسال خواهد شد.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Fields Section */}
