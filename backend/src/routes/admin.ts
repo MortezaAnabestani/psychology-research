@@ -697,18 +697,10 @@ router.get("/export-word", async (req: AuthRequest, res) => {
 
 // ===== BULK MESSAGING =====
 
-// Send bulk message to clients
-router.post("/send-bulk-message", async (req: AuthRequest, res) => {
+// Get users by group type
+router.get("/users-by-group", async (req: AuthRequest, res) => {
   try {
-    const { message, subject, groupType, messageType } = req.body;
-
-    // Validation
-    if (!message || !messageType) {
-      return res.status(400).json({ message: "پیام و نوع ارسال الزامی است" });
-    }
-
-    // Build query based on group filter
-    let query: any = { role: UserRole.CLIENT, isActive: true };
+    const { groupType } = req.query;
 
     let users: any[] = [];
 
@@ -720,10 +712,53 @@ router.post("/send-bulk-message", async (req: AuthRequest, res) => {
       }).select("userId");
 
       const userIds = groupAssignments.map((ga) => ga.userId);
+      users = await User.find({ _id: { $in: userIds }, isActive: true }).select("_id name email phone");
+    } else {
+      // All active clients
+      users = await User.find({ role: UserRole.CLIENT, isActive: true }).select("_id name email phone");
+    }
+
+    res.json({
+      success: true,
+      users: users.map((u) => ({
+        _id: u._id,
+        name: u.name,
+        email: u.email,
+        phone: u.phone || null,
+      })),
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Send bulk message to clients
+router.post("/send-bulk-message", async (req: AuthRequest, res) => {
+  try {
+    const { message, subject, groupType, messageType, selectedUserIds } = req.body;
+
+    // Validation
+    if (!message || !messageType) {
+      return res.status(400).json({ message: "پیام و نوع ارسال الزامی است" });
+    }
+
+    let users: any[] = [];
+
+    // If specific users are selected (individual mode)
+    if (selectedUserIds && Array.isArray(selectedUserIds) && selectedUserIds.length > 0) {
+      users = await User.find({ _id: { $in: selectedUserIds }, isActive: true });
+    } else if (groupType && groupType !== "all") {
+      // Filter by specific group
+      const groupAssignments = await GroupAssignment.find({
+        groupType,
+        isActive: true,
+      }).select("userId");
+
+      const userIds = groupAssignments.map((ga) => ga.userId);
       users = await User.find({ _id: { $in: userIds }, isActive: true });
     } else {
       // All active clients
-      users = await User.find(query);
+      users = await User.find({ role: UserRole.CLIENT, isActive: true });
     }
 
     if (users.length === 0) {
