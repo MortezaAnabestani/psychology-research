@@ -9,7 +9,8 @@
     "test:notifications": "ts-node src/test-notifications.ts",
     "debug:env": "ts-node src/debug-env.ts",
     "check:password": "ts-node src/check-password.ts",
-    "test:email": "ts-node src/test-direct-email.ts"
+    "test:email": "ts-node src/test-direct-email.ts",
+    "test:sms": "ts-node src/test-sms.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -37,6 +38,7 @@
     "@types/node": "^20.19.25",
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^6.4.21",
+    "@types/web-push": "^3.6.4",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
