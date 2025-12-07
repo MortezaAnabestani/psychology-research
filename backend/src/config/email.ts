@@ -1,4 +1,8 @@
 import nodemailer from "nodemailer";
+import * as dotenv from "dotenv";
+
+// بارگذاری تنظیمات محیطی
+dotenv.config();
 
 // بررسی تنظیمات ایمیل
 if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
