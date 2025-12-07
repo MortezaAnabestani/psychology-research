@@ -6,7 +6,8 @@
     "build": "tsc",
     "start": "node dist/app.js",
     "seed": "ts-node src/seeds/index.ts",
-    "test:notifications": "ts-node src/test-notifications.ts"
+    "test:notifications": "ts-node src/test-notifications.ts",
+    "debug:env": "ts-node src/debug-env.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
