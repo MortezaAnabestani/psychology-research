@@ -5,7 +5,7 @@
  * ts-node src/test-notifications.ts
  */
 
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 import { sendEmail } from './config/email';
 import { SMSService } from './services/smsService';
 
