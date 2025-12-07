@@ -735,10 +735,19 @@ router.get("/users-by-group", async (req: AuthRequest, res) => {
 // Send bulk message to clients
 router.post("/send-bulk-message", async (req: AuthRequest, res) => {
   try {
+    console.log('📨 [Bulk Message] Request received:', {
+      messageType: req.body.messageType,
+      groupType: req.body.groupType,
+      hasSubject: !!req.body.subject,
+      hasMessage: !!req.body.message,
+      selectedUserIds: req.body.selectedUserIds?.length || 0,
+    });
+
     const { message, subject, groupType, messageType, selectedUserIds } = req.body;
 
     // Validation
     if (!message || !messageType) {
+      console.log('❌ [Bulk Message] Validation failed: missing message or messageType');
       return res.status(400).json({ message: "پیام و نوع ارسال الزامی است" });
     }
 
@@ -762,8 +771,11 @@ router.post("/send-bulk-message", async (req: AuthRequest, res) => {
     }
 
     if (users.length === 0) {
+      console.log('⚠️  [Bulk Message] No users found to send message');
       return res.status(400).json({ message: "کاربری برای ارسال پیام یافت نشد" });
     }
+
+    console.log(`👥 [Bulk Message] Found ${users.length} users to send message`);
 
     let emailSent = 0;
     let smsSent = 0;
@@ -774,6 +786,7 @@ router.post("/send-bulk-message", async (req: AuthRequest, res) => {
       try {
         // Send Email
         if (messageType === "email" || messageType === "both") {
+          console.log(`📧 [Bulk Message] Sending email to ${user.email}...`);
           await sendEmail(
             user.email,
             subject || "پیام از پژوهش روانشناسی",
@@ -787,6 +800,7 @@ router.post("/send-bulk-message", async (req: AuthRequest, res) => {
             `
           );
           emailSent++;
+          console.log(`✅ [Bulk Message] Email sent to ${user.email}`);
         }
 
         // Send SMS
@@ -806,6 +820,13 @@ router.post("/send-bulk-message", async (req: AuthRequest, res) => {
       }
     }
 
+    console.log(`✅ [Bulk Message] Completed! Stats:`, {
+      totalUsers: users.length,
+      emailSent,
+      smsSent,
+      errors,
+    });
+
     res.json({
       success: true,
       message: "پیام‌ها با موفقیت ارسال شدند",
@@ -817,6 +838,7 @@ router.post("/send-bulk-message", async (req: AuthRequest, res) => {
       },
     });
   } catch (error: any) {
+    console.error('❌ [Bulk Message] Error:', error);
     res.status(500).json({ message: error.message });
   }
 });
