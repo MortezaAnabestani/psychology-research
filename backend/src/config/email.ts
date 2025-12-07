@@ -22,7 +22,7 @@ export const transporter = nodemailer.createTransport({
   // تنظیمات اضافی برای بهبود سازگاری با هاست‌های مختلف
   tls: {
     // برای هاست‌هایی که گواهی خودامضا دارند
-    rejectUnauthorized: process.env.NODE_ENV === "production",
+    rejectUnauthorized: false,
   },
 });
 
