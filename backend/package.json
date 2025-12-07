@@ -9,7 +9,8 @@
     "test:notifications": "ts-node src/test-notifications.ts",
     "debug:env": "ts-node src/debug-env.ts",
     "check:password": "ts-node src/check-password.ts",
-    "test:email": "ts-node src/test-direct-email.ts"
+    "test:email": "ts-node src/test-direct-email.ts",
+    "test:sms": "ts-node src/test-sms.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
