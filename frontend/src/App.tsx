@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import ProtectedRoute from "../../frontend/src/components/ProtectedRoute";
+import { InstallPrompt } from "./components/InstallPrompt";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminClients from "./pages/admin/Clients";
@@ -108,6 +109,9 @@ function App() {
 
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
+
+          {/* Install Prompt برای PWA */}
+          <InstallPrompt />
         </BrowserRouter>
       </NotificationProvider>
     </AuthProvider>
