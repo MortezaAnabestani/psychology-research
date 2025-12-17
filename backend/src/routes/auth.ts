@@ -24,7 +24,7 @@ router.post("/register", async (req, res) => {
     });
 
     // Send welcome email
-    await sendEmail(
+    const emailResult = await sendEmail(
       email,
       "خوش آمدید به برنامه پژوهش",
       `
@@ -38,6 +38,11 @@ router.post("/register", async (req, res) => {
         </div>
       `
     );
+
+    // لاگ کردن نتیجه ارسال ایمیل (اما عدم موفقیت نباید مانع ثبت‌نام شود)
+    if (!emailResult.success) {
+      console.warn(`⚠️ Welcome email failed for ${email}: ${emailResult.error}`);
+    }
 
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || "your-secret-key", {
       expiresIn: "30d",

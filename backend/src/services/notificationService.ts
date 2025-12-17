@@ -160,12 +160,22 @@ export class NotificationService {
         .populate("userId")
         .populate("exerciseId");
 
-      if (!notification) return;
+      if (!notification) {
+        console.warn(`⚠️ Notification ${notificationId} not found`);
+        return;
+      }
 
       const user: any = notification.userId;
+
+      // بررسی اینکه کاربر ایمیل معتبر دارد
+      if (!user || !user.email) {
+        console.warn(`⚠️ User has no email address for notification ${notificationId}`);
+        return;
+      }
+
       const exerciseLink = `${process.env.CLIENT_URL}/exercises/${notification.exerciseId}`;
 
-      await sendEmail(
+      const result = await sendEmail(
         user.email,
         "یادآوری تمرین روزانه",
         `
@@ -179,8 +189,12 @@ export class NotificationService {
         `
       );
 
-      notification.sentAt = new Date();
-      await notification.save();
+      if (result.success) {
+        notification.sentAt = new Date();
+        await notification.save();
+      } else {
+        console.error(`❌ Failed to send email notification to ${user.email}: ${result.error}`);
+      }
     } catch (error) {
       console.error("Error sending email notification:", error);
     }

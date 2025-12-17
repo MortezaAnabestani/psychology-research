@@ -99,60 +99,61 @@ async function testEmailSending() {
 
   log(`📨 در حال ارسال ایمیل تست به: ${testEmail}`, colors.yellow);
 
-  try {
-    await sendEmail(
-      testEmail,
-      '✅ تست موفق - سیستم ایمیل پژوهش روانشناسی',
-      `
-        <div dir="rtl" style="font-family: Tahoma, Arial; padding: 20px; background: #f5f5f5;">
-          <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <h1 style="color: #4F46E5; margin-top: 0;">🎉 تبریک!</h1>
-            <h2 style="color: #333;">سیستم ایمیل با موفقیت راه‌اندازی شد</h2>
+  const result = await sendEmail(
+    testEmail,
+    '✅ تست موفق - سیستم ایمیل پژوهش روانشناسی',
+    `
+      <div dir="rtl" style="font-family: Tahoma, Arial; padding: 20px; background: #f5f5f5;">
+        <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <h1 style="color: #4F46E5; margin-top: 0;">🎉 تبریک!</h1>
+          <h2 style="color: #333;">سیستم ایمیل با موفقیت راه‌اندازی شد</h2>
 
-            <div style="background: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p style="margin: 0; color: #2e7d32;">
-                ✅ این ایمیل نشان می‌دهد که تنظیمات ایمیل شما به درستی انجام شده است.
-              </p>
-            </div>
-
-            <h3 style="color: #333;">اطلاعات تست:</h3>
-            <ul style="line-height: 1.8; color: #666;">
-              <li><strong>سرور SMTP:</strong> ${process.env.EMAIL_HOST}</li>
-              <li><strong>پورت:</strong> ${process.env.EMAIL_PORT}</li>
-              <li><strong>ایمیل فرستنده:</strong> ${process.env.EMAIL_USER}</li>
-              <li><strong>زمان تست:</strong> ${new Date().toLocaleString('fa-IR')}</li>
-            </ul>
-
-            <div style="background: #fff3e0; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p style="margin: 0; color: #e65100;">
-                <strong>⚠️ نکته:</strong> اگر این ایمیل به پوشه اسپم رفت، آن را به عنوان "Not Spam" علامت بزنید.
-              </p>
-            </div>
-
-            <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
-
-            <p style="color: #999; font-size: 14px; text-align: center;">
-              پژوهش روانشناسی - سیستم ارسال خودکار ایمیل
+          <div style="background: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="margin: 0; color: #2e7d32;">
+              ✅ این ایمیل نشان می‌دهد که تنظیمات ایمیل شما به درستی انجام شده است.
             </p>
           </div>
-        </div>
-      `
-    );
 
+          <h3 style="color: #333;">اطلاعات تست:</h3>
+          <ul style="line-height: 1.8; color: #666;">
+            <li><strong>سرور SMTP:</strong> ${process.env.EMAIL_HOST}</li>
+            <li><strong>پورت:</strong> ${process.env.EMAIL_PORT}</li>
+            <li><strong>ایمیل فرستنده:</strong> ${process.env.EMAIL_USER}</li>
+            <li><strong>زمان تست:</strong> ${new Date().toLocaleString('fa-IR')}</li>
+          </ul>
+
+          <div style="background: #fff3e0; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="margin: 0; color: #e65100;">
+              <strong>⚠️ نکته:</strong> اگر این ایمیل به پوشه اسپم رفت، آن را به عنوان "Not Spam" علامت بزنید.
+            </p>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+
+          <p style="color: #999; font-size: 14px; text-align: center;">
+            پژوهش روانشناسی - سیستم ارسال خودکار ایمیل
+          </p>
+        </div>
+      </div>
+    `
+  );
+
+  if (result.success) {
     log('✅ ایمیل با موفقیت ارسال شد!', colors.green);
     log('📬 لطفاً صندوق ایمیل خود را بررسی کنید.', colors.blue);
     log('   (ممکن است در پوشه Spam یا Junk باشد)', colors.yellow);
     return true;
-
-  } catch (error: any) {
+  } else {
     log('❌ خطا در ارسال ایمیل:', colors.red);
-    log(error.message, colors.red);
+    log(result.error || 'Unknown error', colors.red);
 
     // راهنمایی برای خطاهای رایج
-    if (error.message.includes('Authentication failed')) {
+    if (result.error?.includes('Authentication failed') || result.error?.includes('Invalid credentials')) {
       log('\n💡 راهنمایی: نام کاربری یا رمز عبور اشتباه است.', colors.yellow);
-    } else if (error.message.includes('ETIMEDOUT') || error.message.includes('ECONNREFUSED')) {
+    } else if (result.error?.includes('Connection failed') || result.error?.includes('ETIMEDOUT') || result.error?.includes('ECONNREFUSED')) {
       log('\n💡 راهنمایی: مشکل در اتصال به سرور SMTP. پورت یا هاست را بررسی کنید.', colors.yellow);
+    } else if (result.error?.includes('Invalid email')) {
+      log('\n💡 راهنمایی: فرمت آدرس ایمیل نامعتبر است.', colors.yellow);
     }
 
     return false;

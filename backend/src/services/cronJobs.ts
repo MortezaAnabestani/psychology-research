@@ -24,9 +24,10 @@ export function startCronJobs() {
 
       for (const notification of pendingNotifications) {
         // Send push, email, and SMS notifications
-        await NotificationService.sendPushNotification(notification._id.toString());
-        await NotificationService.sendEmailNotification(notification._id.toString());
-        await NotificationService.sendSMSNotification(notification._id.toString());
+        const notificationId = (notification._id as any).toString();
+        await NotificationService.sendPushNotification(notificationId);
+        await NotificationService.sendEmailNotification(notificationId);
+        await NotificationService.sendSMSNotification(notificationId);
       }
     } catch (error) {
       console.error("Cron job error:", error);
@@ -46,20 +47,30 @@ export function startCronJobs() {
       for (const exercise of incompleteExercises) {
         const user: any = exercise.userId;
 
-        await sendEmail(
+        // بررسی اینکه کاربر ایمیل معتبر دارد
+        if (!user || !user.email) {
+          console.warn(`⚠️ User has no email for incomplete exercise reminder`);
+          continue;
+        }
+
+        const result = await sendEmail(
           user.email,
           "یادآوری تمرین ناتمام",
           `
             <div dir="rtl" style="font-family: Tahoma, Arial;">
               <h2>سلام ${user.name} عزیز</h2>
               <p>شما یک تمرین ناتمام دارید. لطفاً برای ادامه تمرین وارد سایت شوید.</p>
-              <a href="${process.env.CLIENT_URL}/exercises/${exercise._id}" 
+              <a href="${process.env.CLIENT_URL}/exercises/${exercise._id}"
                  style="background: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">
                 ادامه تمرین
               </a>
             </div>
           `
         );
+
+        if (!result.success) {
+          console.error(`❌ Failed to send reminder email to ${user.email}: ${result.error}`);
+        }
       }
     } catch (error) {
       console.error("Reminder cron job error:", error);

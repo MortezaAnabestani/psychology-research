@@ -786,8 +786,15 @@ router.post("/send-bulk-message", async (req: AuthRequest, res) => {
       try {
         // Send Email
         if (messageType === "email" || messageType === "both") {
+          // بررسی اینکه کاربر ایمیل معتبر دارد
+          if (!user.email) {
+            console.warn(`⚠️ [Bulk Message] User ${user.name} has no email address, skipping...`);
+            errors++;
+            continue;
+          }
+
           console.log(`📧 [Bulk Message] Sending email to ${user.email}...`);
-          await sendEmail(
+          const result = await sendEmail(
             user.email,
             subject || "پیام از پژوهش روانشناسی",
             `
@@ -799,8 +806,14 @@ router.post("/send-bulk-message", async (req: AuthRequest, res) => {
               </div>
             `
           );
-          emailSent++;
-          console.log(`✅ [Bulk Message] Email sent to ${user.email}`);
+
+          if (result.success) {
+            emailSent++;
+            console.log(`✅ [Bulk Message] Email sent to ${user.email}`);
+          } else {
+            errors++;
+            console.error(`❌ [Bulk Message] Failed to send email to ${user.email}: ${result.error}`);
+          }
         }
 
         // Send SMS
@@ -812,6 +825,8 @@ router.post("/send-bulk-message", async (req: AuthRequest, res) => {
             } else {
               errors++;
             }
+          } else {
+            console.warn(`⚠️ [Bulk Message] User ${user.name} has no phone number, skipping SMS...`);
           }
         }
       } catch (error) {

@@ -53,9 +53,9 @@ console.log('✅ Transporter ساخته شد\n');
 
 // ارسال ایمیل تست
 async function sendTestEmail() {
-  try {
-    console.log('📨 در حال ارسال ایمیل تست...\n');
+  console.log('📨 در حال ارسال ایمیل تست...\n');
 
+  try {
     const info = await transporter.sendMail({
       from: `"پژوهش روانشناسی - تست" <${emailUser}>`,
       to: emailUser, // به خودمان می‌فرستیم
@@ -74,10 +74,27 @@ async function sendTestEmail() {
     console.log('\n✅ ایمیل با موفقیت ارسال شد!');
     console.log(`📬 Message ID: ${info.messageId}`);
     console.log(`📊 Response: ${info.response}`);
+    console.log('\n💡 نکته: اگر ایمیل دریافت نشد، پوشه Spam/Junk را بررسی کنید.');
 
   } catch (error: any) {
     console.log('\n❌ خطا در ارسال:');
-    console.log(error);
+    console.error(error);
+
+    // راهنمایی برای خطاهای رایج
+    console.log('\n📋 راهنمایی رفع مشکل:');
+    if (error.message?.includes('Authentication failed') || error.message?.includes('Invalid login')) {
+      console.log('  • نام کاربری یا رمز عبور اشتباه است');
+      console.log('  • EMAIL_USER و EMAIL_PASSWORD را در فایل .env بررسی کنید');
+    } else if (error.message?.includes('ETIMEDOUT') || error.message?.includes('ECONNREFUSED')) {
+      console.log('  • مشکل در اتصال به سرور SMTP');
+      console.log('  • EMAIL_HOST و EMAIL_PORT را بررسی کنید');
+      console.log(`  • هاست فعلی: ${emailHost}:${emailPort}`);
+    } else if (error.code === 'ENOTFOUND') {
+      console.log('  • سرور SMTP پیدا نشد');
+      console.log(`  • آدرس ${emailHost} را بررسی کنید`);
+    }
+
+    process.exit(1);
   }
 }
 
