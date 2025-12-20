@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import ClientLayout from "../../components/ClientLayout";
+import PushNotificationStatus from "../../components/PushNotificationStatus";
 import {
   ClipboardList,
   Lock,
@@ -171,6 +172,9 @@ const ClientDashboard: React.FC = () => {
             </p>
           </div>
         </div>
+
+        {/* Push Notification Status */}
+        <PushNotificationStatus />
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">

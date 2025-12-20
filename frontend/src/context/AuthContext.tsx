@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
+import { subscribeToPushNotifications } from "../utils/pwaSetup";
 
 interface User {
   id: string;
@@ -39,6 +40,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/me`);
       setUser(res.data.user);
+
+      // Subscribe to push notifications after successful authentication
+      if (res.data.user.role === "client") {
+        subscribeToPushNotifications().catch((error) => {
+          console.warn("Failed to subscribe to push notifications:", error);
+        });
+      }
     } catch (error) {
       logout();
     } finally {
@@ -57,6 +65,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     axios.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
     setToken(newToken);
     setUser(newUser);
+
+    // Subscribe to push notifications after login (only for clients)
+    if (newUser.role === "client") {
+      subscribeToPushNotifications().catch((error) => {
+        console.warn("Failed to subscribe to push notifications:", error);
+      });
+    }
   };
 
   const logout = () => {
