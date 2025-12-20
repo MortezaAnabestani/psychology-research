@@ -7,11 +7,21 @@ import { sendEmail } from "../config/email";
 import { SMSService } from "./smsService";
 
 // Configure web-push
-webpush.setVapidDetails(
-  process.env.VAPID_EMAIL!,
-  process.env.VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
+// Only configure VAPID if all required environment variables are present
+if (process.env.VAPID_EMAIL && process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  // VAPID_EMAIL must be a valid URL (either mailto: or https://)
+  const vapidSubject = process.env.VAPID_EMAIL.startsWith('mailto:') || process.env.VAPID_EMAIL.startsWith('https://')
+    ? process.env.VAPID_EMAIL
+    : `mailto:${process.env.VAPID_EMAIL}`;
+
+  webpush.setVapidDetails(
+    vapidSubject,
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+} else {
+  console.warn('⚠️  VAPID configuration incomplete. Push notifications will not work.');
+}
 
 export class NotificationService {
   // Schedule notifications for a new exercise
