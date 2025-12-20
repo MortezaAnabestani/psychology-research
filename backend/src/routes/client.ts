@@ -6,6 +6,7 @@ import { ExerciseTemplate } from "../models/ExerciseTemplate";
 import { Notification } from "../models/Notification";
 import { User } from "../models/User";
 import { ExerciseStatus } from "../types";
+import { NotificationService } from "../services/notificationService";
 
 const router = express.Router();
 
@@ -137,6 +138,9 @@ router.post("/set-notification-time", async (req: AuthRequest, res) => {
     if (!assignment) {
       return res.status(404).json({ message: "گروه یافت نشد" });
     }
+
+    // Reschedule all pending notifications for this user's exercises
+    await NotificationService.rescheduleUserNotifications(req.user!.id, groupAssignmentId, time);
 
     res.json({ success: true, assignment });
   } catch (error: any) {

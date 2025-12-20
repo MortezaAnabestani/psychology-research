@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 export const connectDatabase = async () => {
   try {
     const conn = await mongoose.connect(
-      process.env.MONGODB_URI || "mongodb://localhost:27017/psychology-research"
+      process.env.MONGODB_URI ||
+        "mongodb://mashaaye_3pidehmash:%40Sepidehsan92@localhost:27017/mashaaye_psychology"
     );
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {

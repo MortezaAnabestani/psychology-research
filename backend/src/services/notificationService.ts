@@ -1,6 +1,6 @@
 import webpush from "web-push";
 import { Notification } from "../models/Notification";
-import { UserExercise } from "../models/UserExercise";
+import { UserExercise, ExerciseStatus } from "../models/UserExercise";
 import { ExerciseTemplate } from "../models/ExerciseTemplate";
 import { User } from "../models/User";
 import { sendEmail } from "../config/email";
@@ -22,11 +22,25 @@ export class NotificationService {
         .populate("groupAssignmentId")
         .populate("userId");
 
-      if (!userExercise) return;
+      if (!userExercise) {
+        console.warn(`⚠️ UserExercise ${userExerciseId} not found for notification scheduling`);
+        return;
+      }
 
       const template: any = userExercise.exerciseTemplateId;
       const assignment: any = userExercise.groupAssignmentId;
       const user: any = userExercise.userId;
+
+      if (!template || !assignment || !user) {
+        console.warn(`⚠️ Missing data for scheduling notifications: template=${!!template}, assignment=${!!assignment}, user=${!!user}`);
+        return;
+      }
+
+      // Check if user has set their morning notification time
+      if (!assignment.morningNotificationTime) {
+        console.warn(`⚠️ User ${user.name} (${user._id}) has not set morning notification time. Skipping notification scheduling.`);
+        return;
+      }
 
       // Schedule notifications based on template configuration
       for (const notifConfig of template.notifications) {
@@ -40,6 +54,8 @@ export class NotificationService {
             message,
             scheduledFor: time,
           });
+
+          console.log(`✅ Scheduled notification for ${user.name} at ${time.toLocaleString('fa-IR')}: ${message.substring(0, 50)}...`);
         }
       }
     } catch (error) {
@@ -53,13 +69,18 @@ export class NotificationService {
     userMorningTime: string
   ): Array<{ time: Date; message: string }> {
     const notifications: Array<{ time: Date; message: string }> = [];
-    const today = new Date();
+    const now = new Date();
 
     if (config.scheduleType === "user_time") {
       // Use user's selected morning time
       const [hours, minutes] = userMorningTime.split(":").map(Number);
-      const time = new Date(today);
+      const time = new Date(now);
       time.setHours(hours, minutes, 0, 0);
+
+      // If the time has already passed today, schedule for tomorrow
+      if (time <= now) {
+        time.setDate(time.getDate() + 1);
+      }
 
       notifications.push({
         time,
@@ -69,8 +90,13 @@ export class NotificationService {
       // Use fixed times
       config.times?.forEach((timeStr: string, index: number) => {
         const [hours, minutes] = timeStr.split(":").map(Number);
-        const time = new Date(today);
+        const time = new Date(now);
         time.setHours(hours, minutes, 0, 0);
+
+        // If the time has already passed today, schedule for tomorrow
+        if (time <= now) {
+          time.setDate(time.getDate() + 1);
+        }
 
         notifications.push({
           time,
@@ -81,6 +107,11 @@ export class NotificationService {
       // Generate random times within ranges
       config.timeRanges?.forEach((range: any, index: number) => {
         const time = this.getRandomTimeInRange(range.start, range.end);
+
+        // If the time has already passed today, schedule for tomorrow
+        if (time <= now) {
+          time.setDate(time.getDate() + 1);
+        }
 
         notifications.push({
           time,
@@ -232,6 +263,57 @@ export class NotificationService {
       }
     } catch (error) {
       console.error("Error sending SMS notification:", error);
+    }
+  }
+
+  // Reschedule all pending notifications for a user when they update their morning time
+  static async rescheduleUserNotifications(userId: string, groupAssignmentId: string, newMorningTime: string) {
+    try {
+      // Find all user exercises for this group assignment
+      const userExercises = await UserExercise.find({
+        userId,
+        groupAssignmentId,
+        status: { $in: [ExerciseStatus.AVAILABLE, ExerciseStatus.IN_PROGRESS] }
+      }).populate("exerciseTemplateId");
+
+      console.log(`🔄 Rescheduling notifications for user ${userId}, found ${userExercises.length} active exercises`);
+
+      for (const userExercise of userExercises) {
+        const template: any = userExercise.exerciseTemplateId;
+        if (!template || !template.notifications) continue;
+
+        // Delete all pending notifications for this exercise
+        const deletedCount = await Notification.deleteMany({
+          userId,
+          exerciseId: userExercise._id,
+          sentAt: null, // Only delete notifications that haven't been sent yet
+        });
+
+        console.log(`🗑️ Deleted ${deletedCount.deletedCount} pending notifications for exercise ${template.title}`);
+
+        // Recreate notifications with the new time
+        for (const notifConfig of template.notifications) {
+          if (notifConfig.scheduleType === "user_time") {
+            const notifications = this.generateNotificationTimes(notifConfig, newMorningTime);
+
+            for (const { time, message } of notifications) {
+              await Notification.create({
+                userId,
+                exerciseId: userExercise._id,
+                type: notifConfig.type,
+                message,
+                scheduledFor: time,
+              });
+
+              console.log(`✅ Rescheduled notification for ${time.toLocaleString('fa-IR')}: ${message.substring(0, 50)}...`);
+            }
+          }
+        }
+      }
+
+      console.log(`✅ Successfully rescheduled all notifications for user ${userId}`);
+    } catch (error) {
+      console.error("Error rescheduling notifications:", error);
     }
   }
 }

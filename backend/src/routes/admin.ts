@@ -10,6 +10,7 @@ import ExcelJS from "exceljs";
 import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType, AlignmentType } from "docx";
 import { sendEmail } from "../config/email";
 import { SMSService } from "../services/smsService";
+import { NotificationService } from "../services/notificationService";
 
 const router = express.Router();
 
@@ -147,12 +148,15 @@ router.post("/assign-group", async (req: AuthRequest, res) => {
     const templates = await ExerciseTemplate.find({ groupType }).sort("order");
 
     for (let i = 0; i < templates.length; i++) {
-      await UserExercise.create({
+      const userExercise = await UserExercise.create({
         userId,
         groupAssignmentId: assignment._id,
         exerciseTemplateId: templates[i]._id,
         status: i === 0 ? ExerciseStatus.AVAILABLE : ExerciseStatus.LOCKED,
       });
+
+      // Schedule notifications for this exercise
+      await NotificationService.scheduleExerciseNotifications((userExercise._id as any).toString());
     }
 
     res.status(201).json({ success: true, assignment });

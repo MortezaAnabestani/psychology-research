@@ -28,13 +28,34 @@ export const transporter = nodemailer.createTransport({
     // برای هاست‌هایی که گواهی خودامضا دارند
     rejectUnauthorized: false,
   },
+  // تنظیمات برای بهبود تحویل ایمیل
+  pool: true, // استفاده از connection pool
+  maxConnections: 5,
+  maxMessages: 100,
+  // تنظیمات برای جلوگیری از ارسال مستقیم به Gmail
+  requireTLS: !isSecure, // فقط برای پورت 587
+  dnsTimeout: 30000,
 });
 
-export const sendEmail = async (
+// SMTP relay برای Gmail (اختیاری - اگر می‌خواهید فقط برای Gmail از سرویس دیگری استفاده کنید)
+const gmailTransporter = process.env.GMAIL_RELAY_HOST
+  ? nodemailer.createTransport({
+      host: process.env.GMAIL_RELAY_HOST,
+      port: parseInt(process.env.GMAIL_RELAY_PORT || "587"),
+      secure: false,
+      auth: {
+        user: process.env.GMAIL_RELAY_USER || process.env.EMAIL_USER,
+        pass: process.env.GMAIL_RELAY_PASSWORD || process.env.EMAIL_PASSWORD,
+      },
+      tls: { rejectUnauthorized: false },
+    })
+  : null;
+
+export async function sendEmail(
   to: string,
   subject: string,
   html: string
-): Promise<{ success: boolean; error?: string }> => {
+): Promise<{ success: boolean; error?: string }> {
   // بررسی اینکه آیا تنظیمات ایمیل وجود دارد
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
     console.error("❌ Email configuration missing. Please set EMAIL_USER and EMAIL_PASSWORD in .env file");
@@ -54,14 +75,36 @@ export const sendEmail = async (
     };
   }
 
+  // انتخاب transporter مناسب
+  const isGmail = to.toLowerCase().includes("@gmail.com");
+  const selectedTransporter = isGmail && gmailTransporter ? gmailTransporter : transporter;
+
+  if (isGmail && gmailTransporter) {
+    console.log(`📧 Using Gmail relay for ${to}`);
+  }
+
   try {
-    const info = await transporter.sendMail({
+    const info = await selectedTransporter.sendMail({
       from: `"${process.env.EMAIL_FROM_NAME || "پژوهش روانشناسی"}" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       html,
+      // Headers اضافی برای بهبود تحویل و جلوگیری از spam
+      headers: {
+        "X-Mailer": "Psychology Research Platform",
+        "X-Priority": "3",
+        "List-Unsubscribe": `<mailto:${process.env.EMAIL_USER}?subject=unsubscribe>`,
+      },
+      // تنظیمات اضافی
+      priority: "normal",
+      encoding: "utf-8",
     });
-    console.log(`✅ Email sent successfully to ${to} - MessageID: ${info.messageId}`);
+
+    console.log(`✅ Email sent successfully to ${to}`);
+    console.log(`   MessageID: ${info.messageId}`);
+    console.log(`   Accepted: ${info.accepted?.join(", ") || "N/A"}`);
+    console.log(`   Rejected: ${info.rejected?.join(", ") || "None"}`);
+
     return { success: true };
   } catch (error: any) {
     console.error(`❌ Failed to send email to ${to}:`, error.message);
@@ -81,4 +124,4 @@ export const sendEmail = async (
       error: errorMessage,
     };
   }
-};
+}

@@ -10,6 +10,8 @@
     "debug:env": "ts-node src/debug-env.ts",
     "check:password": "ts-node src/check-password.ts",
     "test:email": "ts-node src/test-direct-email.ts",
+    "test:email:delivery": "ts-node src/test-email-delivery.ts",
+    "debug:email:config": "ts-node src/debug-email-config.ts",
     "test:sms": "ts-node src/test-sms.ts",
     "debug:kavenegar": "ts-node src/debug-kavenegar.ts"
   },
