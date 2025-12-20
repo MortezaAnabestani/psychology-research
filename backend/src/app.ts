@@ -9,6 +9,7 @@ import clientRoutes from "./routes/client";
 import exerciseRoutes from "./routes/exercises";
 import notificationRoutes from "./routes/notifications";
 import { errorHandler } from "./middleware/errorHandler";
+import { startCronJobs } from "./services/cronJobs";
 
 const app = express();
 
@@ -36,6 +37,9 @@ app.use(errorHandler);
 
 // Database Connection
 connectDatabase();
+
+// Start Cron Jobs
+startCronJobs();
 
 // Start Server
 const PORT = process.env.PORT || 5000;
