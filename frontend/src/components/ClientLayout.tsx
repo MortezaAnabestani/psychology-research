@@ -1,8 +1,8 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Home, Bell, LogOut, Settings } from "lucide-react";
-import { useNotifications } from "../context/NotificationContext";
+import { Home, LogOut, Settings } from "lucide-react";
+import NotificationPanel from "./NotificationPanel";
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -11,7 +11,6 @@ interface ClientLayoutProps {
 const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { unreadCount } = useNotifications();
 
   const handleLogout = () => {
     logout();
@@ -38,14 +37,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
               >
                 <Home className="w-4 h-4 sm:w-5 sm:h-5" />
               </Link>
-              <button className="relative p-1.5 sm:p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">
-                <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-red-500 text-white text-[10px] sm:text-xs rounded-full flex items-center justify-center">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
+              <NotificationPanel />
               <Link
                 to="/settings"
                 className="p-1.5 sm:p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
